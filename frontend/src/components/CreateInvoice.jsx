@@ -87,23 +87,23 @@ function CreateInvoice() {
     const clientCity = formData.get("clientCity");
     const clientPostalcode = formData.get("clientPostalcode");
 
-    // Get arrays of all values for each field
-    const descriptions = formData.getAll("description");
-    const qtys = formData.getAll("qty");
-    const unitPrices = formData.getAll("unitPrice");
-    const discounts = formData.getAll("discount");
-    const taxes = formData.getAll("tax");
-    const amounts = formData.getAll("amount");
+    // // Get arrays of all values for each field
+    // const descriptions = formData.getAll("description");
+    // const qtys = formData.getAll("qty");
+    // const unitPrices = formData.getAll("unitPrice");
+    // const discounts = formData.getAll("discount");
+    // const taxes = formData.getAll("tax");
+    // const amounts = formData.getAll("amount");
 
-    // Combine into array of item objects
-    const items = descriptions.map((description, index) => ({
-      description,
-      qty: qtys[index],
-      unitPrice: unitPrices[index],
-      discount: discounts[index],
-      tax: taxes[index],
-      amount: amounts[index]
-    }));
+    // // Combine into array of item objects
+    // const items = descriptions.map((description, index) => ({
+    //   description,
+    //   qty: qtys[index],
+    //   unitPrice: unitPrices[index],
+    //   discount: discounts[index],
+    //   tax: taxes[index],
+    //   amount: amounts[index]
+    // }));
     const data = {
       userAddress,
       userFname,
@@ -119,7 +119,7 @@ function CreateInvoice() {
       clientCountry,
       clientCity,
       clientPostalcode,
-      items
+      itemData
     }
     console.log(data);
 
