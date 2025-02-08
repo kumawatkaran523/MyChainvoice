@@ -1,21 +1,19 @@
-import React, { useEffect, useState } from 'react'
-import { Input } from './ui/input'
-import { Button } from './ui/button'
-import { BrowserProvider, Contract, ethers, JsonRpcProvider } from 'ethers'
-import { useAccount, useWalletClient } from 'wagmi'
+import React, { useEffect, useState } from 'react';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { BrowserProvider, Contract, ethers } from 'ethers';
+import { useAccount, useWalletClient } from 'wagmi';
 import { ChainvoiceABI } from '../contractsABI/ChainvoiceABI';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-
-import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
-import { Label } from './ui/label'
-import EthCrypto from 'eth-crypto'
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { Label } from './ui/label';
 
 function CreateInvoice() {
   const { data: walletClient } = useWalletClient();
@@ -23,39 +21,44 @@ function CreateInvoice() {
   const account = useAccount();
   const [dueDate, setDueDate] = useState();
   const [issueDate, setIssueDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
 
-  const createInvoiceRequest = async () => {
+  const createInvoiceRequest = async (data) => {
     if (!isConnected || !walletClient) {
       alert('Please connect your wallet');
       return;
     }
-
     try {
       setLoading(true);
       const provider = new BrowserProvider(walletClient);
-      // const provider = new JsonRpcProvider(import.meta.env.VITE_BLOCKCHAIN_URI);
       const signer = await provider.getSigner();
       const contract = new Contract(
         import.meta.env.VITE_CONTRACT_ADDRESS,
         ChainvoiceABI,
         signer
       );
-      console.log(receiverAddress);
 
-      const res = await contract.createInvoice(ethers.parseUnits(amount, 18), receiverAddress);
-      console.log('Transaction details:', {
-        from: res.from,
-        to: res.to,
-        receiverAddress: receiverAddress,
-        contractAddress: import.meta.env.VITE_CONTRACT_ADDRESS
-      })
+      // Convert totalAmountDue to wei using ethers.parseUnits
+      const amountInWei = ethers.parseUnits(totalAmountDue.toString(), 18); // Use 18 for wei
+
+      // Log the converted amount
+      console.log("amountInWei:", amountInWei.toString());
+
+      const res = await contract.createInvoice(
+        amountInWei.toString(), // Pass as a string
+        data.clientAddress,
+        [data.userFname, data.userLname, data.userEmail, data.userCountry, data.userCity, data.userPostalcode],
+        [data.clientFname, data.clientLname, data.clientEmail, data.clientCountry, data.clientCity, data.clientPostalcode],
+        itemData
+      );
+      console.log("Transaction successful", res);
     } catch (error) {
       console.error('Invoice creation error:', error);
       alert('Failed to create invoice');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const [itemData, setItemData] = useState([{
     description: '',
@@ -65,11 +68,12 @@ function CreateInvoice() {
     tax: '',
     amount: ''
   }]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    // user detail
+    // User detail
     const userAddress = formData.get("userAddress");
     const userFname = formData.get("userFname");
     const userLname = formData.get("userLname");
@@ -78,7 +82,7 @@ function CreateInvoice() {
     const userCity = formData.get("userCity");
     const userPostalcode = formData.get("userPostalcode");
 
-    // client detail
+    // Client detail
     const clientAddress = formData.get("clientAddress");
     const clientFname = formData.get("clientFname");
     const clientLname = formData.get("clientLname");
@@ -87,23 +91,6 @@ function CreateInvoice() {
     const clientCity = formData.get("clientCity");
     const clientPostalcode = formData.get("clientPostalcode");
 
-    // // Get arrays of all values for each field
-    // const descriptions = formData.getAll("description");
-    // const qtys = formData.getAll("qty");
-    // const unitPrices = formData.getAll("unitPrice");
-    // const discounts = formData.getAll("discount");
-    // const taxes = formData.getAll("tax");
-    // const amounts = formData.getAll("amount");
-
-    // // Combine into array of item objects
-    // const items = descriptions.map((description, index) => ({
-    //   description,
-    //   qty: qtys[index],
-    //   unitPrice: unitPrices[index],
-    //   discount: discounts[index],
-    //   tax: taxes[index],
-    //   amount: amounts[index]
-    // }));
     const data = {
       userAddress,
       userFname,
@@ -120,13 +107,12 @@ function CreateInvoice() {
       clientCity,
       clientPostalcode,
       itemData
-    }
+    };
     console.log(data);
-
-    e.target.reset();
+    createInvoiceRequest(data);
   };
 
-  const [total, setTotal] = useState(0);
+  const [totalAmountDue, setTotalAmountDue] = useState(0);
   const handleItemData = (e, index) => {
     const { name, value } = e.target;
 
@@ -135,8 +121,8 @@ function CreateInvoice() {
         i === index ? { ...item, [name]: value } : item
       )
     );
-
   };
+
   const addItem = () => {
     setItemData((prev) => [...prev, {
       description: '',
@@ -147,17 +133,16 @@ function CreateInvoice() {
       amount: '',
     }]);
     console.log(itemData.length);
+  };
 
-    
-  }
   useEffect(() => {
     let total = itemData.reduce((sum, item) => {
       return sum + ((parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0) - (parseFloat(item.discount) || 0) + (parseFloat(item.tax) || 0));
     }, 0);
-    
-    setTotal(total);
+
+    setTotalAmountDue(total);
   }, [itemData]);
-  
+
   return (
     <div className='font-Inter'>
       <h2 className="text-xl font-bold mb-7">Create New Invoice Request</h2>
@@ -273,7 +258,7 @@ function CreateInvoice() {
                 ))
             }
           </div>
-          <p className='text-right mr-20'>Total : {total}</p>
+          <p className='text-right mr-20'>Total : {totalAmountDue}</p>
           <div className='flex justify-between items-center'>
             <Button className='my-2' onClick={addItem} type="button"> <span className='text-xl'>+</span> Add Item</Button>
             <Button className='mx-7' type="submit">Create Invoice</Button>
