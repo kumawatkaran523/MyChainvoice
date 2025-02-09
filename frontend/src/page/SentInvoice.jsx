@@ -21,6 +21,7 @@ function SentInvoice() {
     fetchSentInvoices();
   }, [walletClient]);
 
+  
   return (
     <div>
       <h2 className="text-lg font-bold">Your Sent Invoice Requests</h2>
