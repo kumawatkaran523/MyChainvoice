@@ -14,6 +14,7 @@ import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Label } from './ui/label';
+import { parseUnits } from 'viem';
 
 function CreateInvoice() {
   const { data: walletClient } = useWalletClient();
@@ -25,9 +26,10 @@ function CreateInvoice() {
 
   const createInvoiceRequest = async (data) => {
     if (!isConnected || !walletClient) {
-      alert('Please connect your wallet');
+      alert("Please connect your wallet");
       return;
     }
+  
     try {
       setLoading(true);
       const provider = new BrowserProvider(walletClient);
@@ -37,28 +39,45 @@ function CreateInvoice() {
         ChainvoiceABI,
         signer
       );
-
-      // Convert totalAmountDue to wei using ethers.parseUnits
-      const amountInWei = ethers.parseUnits(totalAmountDue.toString(), 18); // Use 18 for wei
-
-      // Log the converted amount
-      console.log("amountInWei:", amountInWei.toString());
-
+      const sanitizedItemData = data.itemData.map((item) => ({
+        ...item,
+        qty: item.qty ? String(item.qty) : "0",
+        unitPrice: item.unitPrice ? ethers.parseUnits(String(item.unitPrice),18): "0",
+        discount: item.discount ? String(item.discount) : "0",
+        tax: item.tax ? String(item.tax) : "0",
+        amount: item.amount ? String(item.amount) : "0",
+      }));
       const res = await contract.createInvoice(
-        amountInWei.toString(), // Pass as a string
+        ethers.parseUnits(String(totalAmountDue),18),
         data.clientAddress,
-        [data.userFname, data.userLname, data.userEmail, data.userCountry, data.userCity, data.userPostalcode],
-        [data.clientFname, data.clientLname, data.clientEmail, data.clientCountry, data.clientCity, data.clientPostalcode],
-        itemData
+        [
+          data.userFname,
+          data.userLname,
+          data.userEmail,
+          data.userCountry,
+          data.userCity,
+          data.userPostalcode,
+        ],
+        [
+          data.clientFname,
+          data.clientLname,
+          data.clientEmail,
+          data.clientCountry,
+          data.clientCity,
+          data.clientPostalcode,
+        ],
+        sanitizedItemData
       );
+  
       console.log("Transaction successful", res);
     } catch (error) {
-      console.error('Invoice creation error:', error);
-      alert('Failed to create invoice');
+      console.error("Invoice creation error:", error);
+      alert("Failed to create invoice");
     } finally {
       setLoading(false);
     }
   };
+  
 
   const [itemData, setItemData] = useState([{
     description: '',
@@ -271,73 +290,3 @@ function CreateInvoice() {
 
 export default CreateInvoice
 
-
-{/* <h2 className="text-lg font-bold mb-7">Create New Invoice Request</h2>
-      <Button>
-            Created At :  
-          <CalendarIcon />
-            {format(new Date(),'PPP')}
-          </Button>
-      <div className='grid mx-10'>
-        <Input
-          type="text"
-          placeholder='Sender address'
-          value={`From : ${account.address}`}
-          className='w-1/2 my-2'
-          disabled
-        />
-        <Input
-          type="text"
-          placeholder='Full Name'
-          // value={receiverAddress}
-          // onChange={(e) => setReceiverAddress(e.target.value)}
-          className='w-1/2 my-2'
-        />
-        <div className='flex gap-2 items-center'>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-[260px] justify-start text-left font-normal",
-                  !dueDate && "text-muted-foreground"
-                )}
-              >
-                Due Date : 
-                <CalendarIcon />
-                {dueDate ? format(dueDate, "PPP") : <span>Pick a due date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dueDate}
-                onSelect={setDueDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-        </div>
-        <Input
-          type="text"
-          placeholder='Receiver address'
-          value={receiverAddress}
-          onChange={(e) => setReceiverAddress(e.target.value)}
-          className='w-1/2 my-2'
-        />
-        <Input
-          type="number"
-          placeholder='Amount (ETH)'
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className='w-1/2 my-2'
-        />
-        <Button
-          className="w-1/2 my-2"
-          onClick={createInvoiceRequest}
-          disabled={loading || !isConnected}
-        >
-          {loading ? 'Creating...' : 'Create Invoice Request'}
-        </Button>
-      </div> */}

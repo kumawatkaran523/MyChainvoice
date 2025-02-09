@@ -17,6 +17,7 @@
     "@tanstack/react-query": "^5.64.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "crypto-convert": "^2.1.7",
     "date-fns": "^3.6.0",
     "eth-crypto": "^2.7.0",
     "ethereum-unit-converter": "^0.0.17",
