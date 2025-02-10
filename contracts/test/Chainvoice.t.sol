@@ -77,7 +77,7 @@ contract TestChainvoice is Test {
     }
 
     function testPayInvoice() public {
-address receiverAdd = 0x24F13d40CF7DE6a81a2a1949aA45F2242e81f1e2;
+        address receiverAdd = 0x24F13d40CF7DE6a81a2a1949aA45F2242e81f1e2;
         uint256 amount = 100;
         Chainvoice.UserDetails memory sender = Chainvoice.UserDetails({
             fname: "Alice",
@@ -130,4 +130,6 @@ address receiverAdd = 0x24F13d40CF7DE6a81a2a1949aA45F2242e81f1e2;
         console.log("Paid", sentInvoices[0].isPaid);
         console.log("-------------------------------------------");
     }
+
+    
 }
