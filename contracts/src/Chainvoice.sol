@@ -3,8 +3,10 @@ pragma solidity ^0.8.13;
 import {Test} from "../lib/forge-std/src/Test.sol";
 import {console} from "../lib/forge-std/src/console.sol";
 
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 contract Chainvoice {
+    AggregatorV3Interface internal priceFeed;
     struct UserDetails {
         string fname;
         string lname;
@@ -36,6 +38,22 @@ contract Chainvoice {
     mapping(address => uint256[]) public receivedInvoices;
     mapping(uint256 => ItemData[]) public itemDatas;
 
+    address public owner;
+    address public treasuryAddress;
+    uint16 public feeAmountInUSD;
+
+    constructor() {
+        priceFeed = AggregatorV3Interface(
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
+        );
+        owner = msg.sender;
+        feeAmountInUSD = 1;
+    }
+
+    modifier OnlyOwner() {
+        require(msg.sender == owner, "Only Owner is accessible");
+        _;
+    }
     event InvoiceCreated(
         uint256 id,
         address indexed from,
@@ -73,7 +91,7 @@ contract Chainvoice {
             })
         );
 
-        for (uint i = 0; i < _items.length; i++) {
+        for (uint256 i = 0; i < _items.length; i++) {
             itemDatas[invoiceId].push(_items[i]);
         }
 
@@ -83,33 +101,84 @@ contract Chainvoice {
         emit InvoiceCreated(invoiceId, msg.sender, to, amountDue);
     }
 
-    function payInvoice(uint256 invoiceId) external payable {
+
+    function usdToNativeCurrencyConversion() public view returns(uint256) {
+        (, int256 answer, , , ) = priceFeed.latestRoundData();
+        require(answer > 0, "Invalid price data");
+        uint256 ethPriceAdjusted = uint256(answer);
+        return (feeAmountInUSD * 1e18) / ethPriceAdjusted;
+    }
+    uint256 public accumulatedFees;
+   function payInvoice(uint256 invoiceId) external payable {
         require(invoiceId < invoices.length, "Invalid invoice ID");
         InvoiceDetails storage invoice = invoices[invoiceId];
         require(msg.sender == invoice.to, "Not authorized to pay this invoice");
         require(!invoice.isPaid, "Invoice already paid");
-        require(msg.value == invoice.amountDue, "Incorrect payment amount");
 
-        (bool success, ) = payable(invoice.from).call{value: msg.value}("");
+        // Calculate fee in native currency
+        uint256 feeAmountInNativeCurrency = usdToNativeCurrencyConversion();
+        require(
+            msg.value >= invoice.amountDue + feeAmountInNativeCurrency,
+            "Payment must cover the invoice amount and fee"
+        );
+
+        // Deduct fee from payment
+        uint256 amountToRecipient = msg.value - feeAmountInNativeCurrency;
+
+        // Transfer payment to invoice recipient
+        (bool success, ) = payable(invoice.from).call{value: amountToRecipient}("");
         require(success, "Payment transfer failed");
 
-        invoice.isPaid = true;
-        emit InvoicePaid(invoiceId, invoice.from, msg.sender, msg.value);
-    }
+        // Accumulate fee in contract
+        accumulatedFees += feeAmountInNativeCurrency;
 
-    function getMySentInvoices() external view returns (InvoiceDetails[] memory) {
+        // Mark invoice as paid
+        invoice.isPaid = true;
+    }
+    function getMySentInvoices()
+        external
+        view
+        returns (InvoiceDetails[] memory)
+    {
         return _getInvoices(sentInvoices[msg.sender]);
     }
 
-    function getMyReceivedInvoices(address add) external view returns (InvoiceDetails[] memory) {
+    function getMyReceivedInvoices(address add)
+        external
+        view
+        returns (InvoiceDetails[] memory)
+    {
         return _getInvoices(receivedInvoices[add]);
     }
 
-    function _getInvoices(uint256[] storage invoiceIds) internal view returns (InvoiceDetails[] memory) {
-        InvoiceDetails[] memory userInvoices = new InvoiceDetails[](invoiceIds.length);
+    function _getInvoices(uint256[] storage invoiceIds)
+        internal
+        view
+        returns (InvoiceDetails[] memory)
+    {
+        InvoiceDetails[] memory userInvoices = new InvoiceDetails[](
+            invoiceIds.length
+        );
         for (uint256 i = 0; i < invoiceIds.length; i++) {
             userInvoices[i] = invoices[invoiceIds[i]];
         }
         return userInvoices;
+    }
+
+    function setTreasuryAddress(address add) public OnlyOwner {
+        require(add != address(0), "Treasury Address cannot be equal to zero");
+        treasuryAddress = add;
+    }
+
+    function setFeeAmount(uint16 fee) public OnlyOwner {
+        feeAmountInUSD = fee;
+    }
+    function withdraw() external {
+        require(accumulatedFees > 0, "No fees to withdraw");
+        uint256 amount = accumulatedFees;
+        accumulatedFees = 0;
+
+        (bool success, ) = payable(treasuryAddress).call{value: amount}("");
+        require(success, "Fee withdrawal failed");
     }
 }
