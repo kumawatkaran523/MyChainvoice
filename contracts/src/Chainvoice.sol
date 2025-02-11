@@ -2,9 +2,7 @@
 pragma solidity ^0.8.13;
 import {Test} from "../lib/forge-std/src/Test.sol";
 import {console} from "../lib/forge-std/src/console.sol";
-
-// import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
-import {AggregatorV3Interface} from '..'
+import {AggregatorV3Interface} from "../lib/chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 contract Chainvoice {
     AggregatorV3Interface internal priceFeed;
     struct UserDetails {
@@ -42,13 +40,12 @@ contract Chainvoice {
     address public treasuryAddress;
     uint16 public feeAmountInUSD;
 
-    constructor() {
-        priceFeed = AggregatorV3Interface(
-            0x694AA1769357215DE4FAC081bf1f309aDC325306
-        );
+    constructor(address _priceFeed) {
+        priceFeed = AggregatorV3Interface(_priceFeed);
         owner = msg.sender;
         feeAmountInUSD = 1;
     }
+
 
     modifier OnlyOwner() {
         require(msg.sender == owner, "Only Owner is accessible");
