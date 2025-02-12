@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 import {Test} from "../lib/forge-std/src/Test.sol";
 import {console} from "../lib/forge-std/src/console.sol";
 import {AggregatorV3Interface} from "../lib/chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+
 contract Chainvoice {
     AggregatorV3Interface internal priceFeed;
     struct UserDetails {
@@ -38,14 +39,13 @@ contract Chainvoice {
 
     address public owner;
     address public treasuryAddress;
-    uint16 public feeAmountInUSD;
+    uint256 public feeAmountInUSD;
 
     constructor(address _priceFeed) {
         priceFeed = AggregatorV3Interface(_priceFeed);
         owner = msg.sender;
-        feeAmountInUSD = 1;
+        feeAmountInUSD = 1 * 1e18;
     }
-
 
     modifier OnlyOwner() {
         require(msg.sender == owner, "Only Owner is accessible");
@@ -98,40 +98,38 @@ contract Chainvoice {
         emit InvoiceCreated(invoiceId, msg.sender, to, amountDue);
     }
 
-    function usdToNativeCurrencyConversion() public view returns(uint256) {
+    function usdToNativeCurrencyConversion() public view returns (uint256) {
         (, int256 answer, , , ) = priceFeed.latestRoundData();
         require(answer > 0, "Invalid price data");
-        uint256 ethPriceAdjusted = uint256(answer)*1e10;
-        return (feeAmountInUSD * 1e18) / ethPriceAdjusted;
+        uint256 price = uint256(answer);
+        uint256 ethPriceAdjusted = price * 1e10;
+        uint256 nativeAmount = (feeAmountInUSD * 1e18);
+
+        return nativeAmount / ethPriceAdjusted;
     }
 
     uint256 public accumulatedFees;
+
     function payInvoice(uint256 invoiceId) external payable {
         require(invoiceId < invoices.length, "Invalid invoice ID");
         InvoiceDetails storage invoice = invoices[invoiceId];
         require(msg.sender == invoice.to, "Not authorized to pay this invoice");
         require(!invoice.isPaid, "Invoice already paid");
 
-        // Calculate fee in native currency
         uint256 feeAmountInNativeCurrency = usdToNativeCurrencyConversion();
         require(
             msg.value >= invoice.amountDue + feeAmountInNativeCurrency,
             "Payment must cover the invoice amount and fee"
         );
-
-        // Deduct fee from payment
         uint256 amountToRecipient = msg.value - feeAmountInNativeCurrency;
-
-        // Transfer payment to invoice recipient
-        (bool success, ) = payable(invoice.from).call{value: amountToRecipient}("");
+        (bool success, ) = payable(invoice.from).call{value: amountToRecipient}(
+            ""
+        );
         require(success, "Payment transfer failed");
-
-        // Accumulate fee in contract
         accumulatedFees += feeAmountInNativeCurrency;
-
-        // Mark invoice as paid
         invoice.isPaid = true;
     }
+
     function getMySentInvoices()
         external
         view
@@ -140,19 +138,15 @@ contract Chainvoice {
         return _getInvoices(sentInvoices[msg.sender]);
     }
 
-    function getMyReceivedInvoices(address add)
-        external
-        view
-        returns (InvoiceDetails[] memory)
-    {
+    function getMyReceivedInvoices(
+        address add
+    ) external view returns (InvoiceDetails[] memory) {
         return _getInvoices(receivedInvoices[add]);
     }
 
-    function _getInvoices(uint256[] storage invoiceIds)
-        internal
-        view
-        returns (InvoiceDetails[] memory)
-    {
+    function _getInvoices(
+        uint256[] storage invoiceIds
+    ) internal view returns (InvoiceDetails[] memory) {
         InvoiceDetails[] memory userInvoices = new InvoiceDetails[](
             invoiceIds.length
         );
@@ -168,8 +162,9 @@ contract Chainvoice {
     }
 
     function setFeeAmount(uint16 fee) public OnlyOwner {
-        feeAmountInUSD = fee;
+        feeAmountInUSD = fee * 1e18;
     }
+
     function withdraw() external {
         require(accumulatedFees > 0, "No fees to withdraw");
         uint256 amount = accumulatedFees;

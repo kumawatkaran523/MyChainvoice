@@ -31,12 +31,11 @@ function ReceivedInvoice() {
 
   const payInvoice = async(id,amountDue) => {
     try {
-      console.log(ethers.toBigInt(id));
         if (!walletClient) return;
         const provider=new BrowserProvider(walletClient);
         const signer=await provider.getSigner();
         const contract= new Contract(import.meta.env.VITE_CONTRACT_ADDRESS,ChainvoiceABI,signer);
-  
+        console.log(amountDue);
         const res = await contract.payInvoice(ethers.toBigInt(id), {
           value: amountDue  
       });

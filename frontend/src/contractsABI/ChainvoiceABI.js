@@ -159,8 +159,8 @@ export const ChainvoiceABI = [
 	  "outputs": [
 		{
 		  "name": "",
-		  "type": "uint16",
-		  "internalType": "uint16"
+		  "type": "uint256",
+		  "internalType": "uint256"
 		}
 	  ],
 	  "stateMutability": "view"
