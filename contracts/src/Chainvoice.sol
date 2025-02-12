@@ -98,15 +98,15 @@ contract Chainvoice {
         emit InvoiceCreated(invoiceId, msg.sender, to, amountDue);
     }
 
-
     function usdToNativeCurrencyConversion() public view returns(uint256) {
         (, int256 answer, , , ) = priceFeed.latestRoundData();
         require(answer > 0, "Invalid price data");
-        uint256 ethPriceAdjusted = uint256(answer);
+        uint256 ethPriceAdjusted = uint256(answer)*1e10;
         return (feeAmountInUSD * 1e18) / ethPriceAdjusted;
     }
+
     uint256 public accumulatedFees;
-   function payInvoice(uint256 invoiceId) external payable {
+    function payInvoice(uint256 invoiceId) external payable {
         require(invoiceId < invoices.length, "Invalid invoice ID");
         InvoiceDetails storage invoice = invoices[invoiceId];
         require(msg.sender == invoice.to, "Not authorized to pay this invoice");

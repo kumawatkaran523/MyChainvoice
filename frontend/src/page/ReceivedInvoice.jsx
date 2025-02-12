@@ -20,6 +20,8 @@ function ReceivedInvoice() {
         const res = await contract.getMyReceivedInvoices(address);
         setReceivedInvoice(res);
         setLoading(false);
+        const fee=await contract.usdToNativeCurrencyConversion();
+        console.log(ethers.formatUnits(fee));
       } catch (error) {
         console.log(error);
       }
