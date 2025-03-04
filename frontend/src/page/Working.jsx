@@ -1,119 +1,132 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
-import Typography from '@mui/material/Typography';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import PendingIcon from '@mui/icons-material/Pending';
-import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import { useNavigate } from 'react-router-dom';
+import SwipeableDrawer from '@mui/material/SwipeableDrawer';
+import Button from '@mui/material/Button';
+import React, { Fragment, useState } from 'react';
+
+import { useRef } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
 export default function Working() {
-  const navigate = useNavigate();
-
-  const list = [
-    {
-      text: 'Create New Invoice Request',
-      icon: <AddCircleIcon />,
-      route: 'create'
-    },
-    {
-      text: 'Pending Payment Requests',
-      icon: <PendingIcon />,
-      route: 'pending'
-    },
-    {
-      text: 'Sent Payment Requests',
-      icon: <MarkEmailReadIcon />,
-      route: 'sent'
+  const [state, setState] = useState(false);
+  const toggleDrawer = () => (event) => {
+    if (
+      event &&
+      event.type === 'keydown' &&
+      (event.key === 'Tab' || event.key === 'Shift')
+    ) {
+      return;
     }
-  ]
+
+    setState((prevState) => !prevState);
+  };
+  const contentRef = useRef();
+  const handlePrint = async () => {
+    const element = contentRef.current;
+    if (!element) {
+      return;
+    }
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+    });
+    const data = canvas.toDataURL("image/png");
+
+    // download feature (implement later on)
+    // const pdf = new jsPDF({
+    //   orientation: "portrait",
+    //   unit: "px",
+    //   format: "a4",
+    // });
+
+    // const imgProperties = pdf.getImageProperties(data);
+    // const pdfWidth = pdf.internal.pageSize.getWidth();
+
+    // const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
+
+    // pdf.addImage(data, "PNG", 0, 0, pdfWidth, pdfHeight);
+    // pdf.save("invoice.pdf");
+  };
+  
   return (
-    <>
-      <p className='text-4xl font-bold my-10 text-white '>
-        Welcome <span className='text-green-500'>Back!</span>
-      </p>
-
-      <Box sx={{ display: 'flex', }}>
-        <Drawer
-          variant="permanent"
-          sx={{
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              backgroundColor: '#161920',
-              color: 'white',
-              top: '184px',
-              left: '180px',
-              borderRight: 'none',
-              position: 'sticky',
-              zIndex: 1,
-            },
-          }}
+    <div >
+      <Fragment key={'right'}>
+        <Button onClick={toggleDrawer()}>Open Drawer</Button>
+        <SwipeableDrawer
+          anchor={'right'}
+          open={state}
+          onClose={toggleDrawer()}
+          onOpen={toggleDrawer()}
         >
-          <Box
-            sx={{
-              overflow: 'auto',
-              background: 'linear-gradient(145deg, #161920, #161920)',
-              padding: '8px',
-              borderRadius: '12px',
-              boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.5)',
-            }}
-            className="shadow-2xl rounded-lg"
-          >
-            <List>
-              {list.map((obj, index) => (
-                <ListItem key={obj.text} disablePadding onClick={() => navigate(obj.route)}>
-                  <ListItemButton
-                    sx={{
-                      borderRadius: '8px',
-                      transition: '0.3s',
-                      '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
-                    }}
-                  >
-                    <ListItemIcon sx={{ color: 'white' }}>
-                      {obj.icon}
-                    </ListItemIcon>
-                    <ListItemText primary={obj.text} sx={{ color: 'white' }} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        </Drawer>
-        <Box component="main"
-          sx={{
-            flexGrow: 1,
-            p: 3,
-            maxHeight: 'calc(80vh - 44px)',
-            overflowY: 'auto',
-            marginLeft: '30px',
-            paddingLeft: '20px',
-            scrollbarWidth: 'none',
-          }}
-          className='bg-[#1b1f29] rounded-md shadow-2xl text-white p-2'
-        >
+          <div style={{ width: 650, padding: 20 }}>
 
-         
-          <Typography sx={{ marginBottom: 2 }}>
-            Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
-            eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
-            neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
-            tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
-            sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
-            tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
-            gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
-            et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
-            tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
-            eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
-            posuere sollicitudin aliquam ultrices sagittis orci a.
-            Lorem ipsum dolor, sit amet consectetur
-            Placeat neque ipsa itaque accusamus, eaque error incidunt voluptatibus animi eum nam similique maiores, laudantium dignissimos. Aliquid odit mollitia dignissimos saepe hic quia, nihil repellendus asperiores eaque magni nulla exercitationem quas aperiam beatae sunt id ullam nobis quasi pariatur inventore obcaecati enim. Et omnis delectus, iusto, consequatur soluta reprehenderit officiis cum debitis nisi fuga nulla quasi quisquam suscipit numquam repellendus facilis quia id voluptas. Aliquam, vitae! Fuga, tempora debitis doloribus explicabo maiores magnam exercitationem temporibus sunt.
-          </Typography>
-        </Box>
-      </Box>
-    </>
+            <div ref={contentRef} className="bg-white p-6  shadow-lg w-full max-w-2xl font-Montserrat">
+              <div className="flex justify-between items-center">
+                <img src="whiteLogo.png" alt="" width={100} />
+                <div>
+                  <p className="text-gray-700 text-xs py-1">Issued on March 4, 2025</p>
+                  <p className="text-gray-700 text-xs ">Payment due by April 3, 2025</p>
+                </div>
+              </div>
+
+              <div className="border-b border-green-500 pb-4 mb-4">
+                <h1 className="text-sm font-bold">Invoice #1</h1>
+              </div>
+
+              <div className="mb-4">
+                <h2 className="text-sm font-semibold">From</h2>
+                <p className="text-gray-700 text-xs">0x24F13d40CF7DE6a81a2a1949aA45F2242e81f1e2</p>
+                <p className="text-gray-700 text-xs">Karan Kumawat</p>
+                <p className="text-blue-500 underline text-xs">kumawatkaran523@gmail.com</p>
+                <p className="text-gray-700 text-xs">JK Lakshmipat University, Jaipur, Rajasthan, India</p>
+              </div>
+
+              <div className="mb-4">
+                <h2 className="text-sm font-semibold">Billed to</h2>
+                <p className="text-gray-700 text-xs">0x00391942bF77E33E55c7750FBD523627f59937FC</p>
+                <p className="text-gray-700 text-xs">Tushar Kumawat</p>
+                <p className="text-blue-500 underline text-xs">kumawatkaran523@gmail.com</p>
+                <p className="text-gray-700 text-xs">JK Lakshmipat University, Jaipur, Rajasthan, India</p>
+              </div>
+
+              <table className="w-full border-collapse border border-gray-300 text-xs">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="border p-2">Description</th>
+                    <th className="border p-2">QTY</th>
+                    <th className="border p-2">Unit Price</th>
+                    <th className="border p-2">Discount</th>
+                    <th className="border p-2">Tax</th>
+                    <th className="border p-2">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border p-2">Laptop</td>
+                    <td className="border p-2">1</td>
+                    <td className="border p-2">996</td>
+                    <td className="border p-2">0</td>
+                    <td className="border p-2">0</td>
+                    <td className="border p-2">996.00</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="mt-4 text-xs">
+                <p className="text-right">Amount without tax: <strong>996.00</strong></p>
+                <p className="text-right">Total Tax amount: <strong>0.00</strong></p>
+                <p className="text-right font-semibold">Total amount: 996.00</p>
+              </div>
+
+              <div className="p-2 flex items-center">
+                <h1 className="text-xs text-center pr-1">Powered by</h1>
+                <img src="whiteLogo.png" alt="" width={80} />
+              </div>
+            </div>
+          </div>
+        </SwipeableDrawer>
+      </Fragment>
+    </div>
   );
 }
+
+

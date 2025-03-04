@@ -1,4 +1,4 @@
-export const ChainvoiceABI = [
+export const ChainvoiceABI =[
 	{
 	  "type": "constructor",
 	  "inputs": [
@@ -281,6 +281,43 @@ export const ChainvoiceABI = [
 			  "internalType": "bool"
 			}
 		  ]
+		},
+		{
+		  "name": "",
+		  "type": "tuple[][]",
+		  "internalType": "struct Chainvoice.ItemData[][]",
+		  "components": [
+			{
+			  "name": "description",
+			  "type": "string",
+			  "internalType": "string"
+			},
+			{
+			  "name": "qty",
+			  "type": "int256",
+			  "internalType": "int256"
+			},
+			{
+			  "name": "unitPrice",
+			  "type": "int256",
+			  "internalType": "int256"
+			},
+			{
+			  "name": "discount",
+			  "type": "int256",
+			  "internalType": "int256"
+			},
+			{
+			  "name": "tax",
+			  "type": "int256",
+			  "internalType": "int256"
+			},
+			{
+			  "name": "amount",
+			  "type": "int256",
+			  "internalType": "int256"
+			}
+		  ]
 		}
 	  ],
 	  "stateMutability": "view"
@@ -393,6 +430,43 @@ export const ChainvoiceABI = [
 			  "name": "isPaid",
 			  "type": "bool",
 			  "internalType": "bool"
+			}
+		  ]
+		},
+		{
+		  "name": "",
+		  "type": "tuple[][]",
+		  "internalType": "struct Chainvoice.ItemData[][]",
+		  "components": [
+			{
+			  "name": "description",
+			  "type": "string",
+			  "internalType": "string"
+			},
+			{
+			  "name": "qty",
+			  "type": "int256",
+			  "internalType": "int256"
+			},
+			{
+			  "name": "unitPrice",
+			  "type": "int256",
+			  "internalType": "int256"
+			},
+			{
+			  "name": "discount",
+			  "type": "int256",
+			  "internalType": "int256"
+			},
+			{
+			  "name": "tax",
+			  "type": "int256",
+			  "internalType": "int256"
+			},
+			{
+			  "name": "amount",
+			  "type": "int256",
+			  "internalType": "int256"
 			}
 		  ]
 		}
