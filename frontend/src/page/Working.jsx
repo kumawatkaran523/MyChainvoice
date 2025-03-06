@@ -90,16 +90,40 @@ export default function Working() {
 
               <table className="w-full border-collapse border border-gray-300 text-xs">
                 <thead>
-                  <tr className="bg-gray-200">
-                    <th className="border p-2">Description</th>
-                    <th className="border p-2">QTY</th>
-                    <th className="border p-2">Unit Price</th>
-                    <th className="border p-2">Discount</th>
-                    <th className="border p-2">Tax</th>
-                    <th className="border p-2">Amount</th>
+                  <tr className="bg-green-500">
+                    <th className="p-2">Description</th>
+                    <th className="p-2">QTY</th>
+                    <th className="p-2">Unit Price</th>
+                    <th className="p-2">Discount</th>
+                    <th className="p-2">Tax</th>
+                    <th className="p-2">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
+                  <tr>
+                    <td className="border p-2">Laptop</td>
+                    <td className="border p-2">1</td>
+                    <td className="border p-2">996</td>
+                    <td className="border p-2">0</td>
+                    <td className="border p-2">0</td>
+                    <td className="border p-2">996.00</td>
+                  </tr>
+                  <tr>
+                    <td className="border p-2">Laptop</td>
+                    <td className="border p-2">1</td>
+                    <td className="border p-2">996</td>
+                    <td className="border p-2">0</td>
+                    <td className="border p-2">0</td>
+                    <td className="border p-2">996.00</td>
+                  </tr>
+                  <tr>
+                    <td className="border p-2">Laptop</td>
+                    <td className="border p-2">1</td>
+                    <td className="border p-2">996</td>
+                    <td className="border p-2">0</td>
+                    <td className="border p-2">0</td>
+                    <td className="border p-2">996.00</td>
+                  </tr>
                   <tr>
                     <td className="border p-2">Laptop</td>
                     <td className="border p-2">1</td>

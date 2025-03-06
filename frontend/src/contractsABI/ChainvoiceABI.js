@@ -475,6 +475,19 @@ export const ChainvoiceABI =[
 	},
 	{
 	  "type": "function",
+	  "name": "getTreasuryAddress",
+	  "inputs": [],
+	  "outputs": [
+		{
+		  "name": "",
+		  "type": "address",
+		  "internalType": "address"
+		}
+	  ],
+	  "stateMutability": "view"
+	},
+	{
+	  "type": "function",
 	  "name": "invoices",
 	  "inputs": [
 		{

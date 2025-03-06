@@ -47,19 +47,27 @@ function SentInvoice() {
   const [sentInvoices, setSentInvoices] = useState([]);
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fee, setFee] = useState(0);
   useEffect(() => {
     if (!walletClient) return;
     const fetchSentInvoices = async () => {
-      setLoading(true);
-      if (!walletClient) return;
-      const provider = new BrowserProvider(walletClient);
-      const signer = await provider.getSigner();
-      const contract = new Contract(import.meta.env.VITE_CONTRACT_ADDRESS, ChainvoiceABI, signer);
-      const res = await contract.getMySentInvoices();
-      const [invoiceDetails, itemData] = res;
-      setSentInvoices(invoiceDetails);
-      setInvoiceItems(itemData);
-      setLoading(false);
+      try {
+        setLoading(true);
+        if (!walletClient) return;
+        const provider = new BrowserProvider(walletClient);
+        const signer = await provider.getSigner();
+        const contract = new Contract(import.meta.env.VITE_CONTRACT_ADDRESS, ChainvoiceABI, signer);
+        const res = await contract.getMySentInvoices();
+        const [invoiceDetails, itemData] = res;
+        setSentInvoices(invoiceDetails);
+        setInvoiceItems(itemData);
+        const fee = await contract.usdToNativeCurrencyConversion();
+        console.log(ethers.formatUnits(fee));
+        setFee(fee);
+        setLoading(false);
+      } catch (error) {
+        alert(error);
+      }
     }
     fetchSentInvoices();
   }, [walletClient]);
@@ -260,19 +268,27 @@ function SentInvoice() {
                         <td className="border p-2">{ethers.formatUnits(item.unitPrice)}</td>
                         <td className="border p-2">{item.discount.toString()}</td>
                         <td className="border p-2">{item.tax.toString()}</td>
-                        <td className="border p-2">{ethers.formatUnits(item.amount)}</td>
+                        <td className="border p-2">
+                          {ethers.formatUnits(item.amount)} ETH
+                        </td>
                       </tr>
                     </tbody>
-              ))
+                  ))
                 }
-            </table>
-            <div className="mt-4 text-xs">
-              <p className="text-right font-semibold">Total amount: {ethers.formatUnits(drawerState.selectedInvoice.amountDue)} ETH</p>
+              </table>
+              <div className="mt-4 text-xs">
+                <p className="text-right font-semibold">Fee for invoice pay : {ethers.formatUnits(fee)} ETH</p>
+                <p className="text-right font-semibold"> Amount: {ethers.formatUnits(drawerState.selectedInvoice.amountDue)} ETH</p>
+                <p className="text-right font-semibold"> Total Amount: {ethers.formatUnits(drawerState.selectedInvoice.amountDue + fee)} ETH</p>
+              </div>
+              <div className="p-2 flex items-center">
+                <h1 className="text-xs text-center pr-1">Powered by</h1>
+                <img src="/whiteLogo.png" alt="" loading="lazy" width={80} />
+              </div>
             </div>
           </div>
-          </div>
-  )
-}
+        )
+        }
       </SwipeableDrawer >
     </div >
   )
