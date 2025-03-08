@@ -40,16 +40,17 @@ function CreateInvoice() {
       );
       const sanitizedItemData = data.itemData.map((item) => ({
         ...item,
-        qty: item.qty ? String(item.qty) : "0",
-        unitPrice: item.unitPrice ? ethers.parseUnits(String(item.unitPrice), 18) : ethers.parseUnits("0", 18),
-        discount: item.discount ? String(item.discount) : "0",
-        tax: item.tax ? String(item.tax) : "0",
-        amount: ethers.parseUnits(String(item.amount || 0), 18)
+        qty: BigInt(item.qty),  
+        unitPrice: ethers.parseUnits(item.unitPrice.toString(), 18),
+        discount: ethers.parseUnits(item.discount.toString(), 18),
+        tax: ethers.parseUnits(item.tax.toString(), 18),
+        amount: BigInt(item.amount), 
       }));
 
       console.log(sanitizedItemData);
+
       const res = await contract.createInvoice(
-        ethers.parseUnits(String(totalAmountDue), 18),
+        totalAmountDue,  // No need to convert again
         data.clientAddress,
         [
           data.userFname,
@@ -69,9 +70,11 @@ function CreateInvoice() {
         ],
         sanitizedItemData
       );
-      setTimeout(()=>{
+
+      setTimeout(() => {
         navigate('/home/sent');
-      },4000);
+      }, 4000);
+
       console.log("Transaction successful", res);
     } catch (error) {
       console.error("Invoice creation error:", error);
@@ -159,12 +162,35 @@ function CreateInvoice() {
   };
 
   useEffect(() => {
-    let total = itemData.reduce((sum, item) => {
-      return sum + ((parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0) - (parseFloat(item.discount) || 0) + (parseFloat(item.tax) || 0));
-    }, 0);
+    if (!itemData || itemData.length === 0) return;
 
-    setTotalAmountDue(total);
+    const updatedItemData = itemData.map((item) => {
+      const qty = item.qty && item.qty !== "" ? parseFloat(item.qty) : 0;
+      const unitPrice = item.unitPrice && item.unitPrice !== "" ? parseFloat(item.unitPrice) : 0;
+      const discount = item.discount && item.discount !== "" ? parseFloat(item.discount) : 0;
+      const tax = item.tax && item.tax !== "" ? parseFloat(item.tax) : 0;
+
+      const amount = (qty * unitPrice) - discount + tax;
+      const amountInWei = ethers.parseUnits(amount.toString(), 18);  
+
+      return {
+        ...item,
+        qty,
+        unitPrice,
+        discount,
+        tax,
+        amount: amountInWei, 
+      };
+    });
+
+    setItemData(updatedItemData);
+
+    const totalAmount = updatedItemData.reduce((sum, item) => sum + parseFloat(ethers.formatUnits(item.amount, 18)), 0);
+    setTotalAmountDue(totalAmount);
+
   }, [itemData]);
+
+
 
   return (
     <div className='font-Inter '>

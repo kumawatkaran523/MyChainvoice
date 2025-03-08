@@ -65,12 +65,14 @@ function SentInvoice() {
         console.log(ethers.formatUnits(fee));
         setFee(fee);
         setLoading(false);
+
       } catch (error) {
         alert(error);
       }
     }
     fetchSentInvoices();
   }, [walletClient]);
+
 
   const [drawerState, setDrawerState] = useState({ open: false, selectedInvoice: null });
 
@@ -260,20 +262,29 @@ function SentInvoice() {
                   </tr>
                 </thead>
                 {
-                  invoiceItems[drawerState.selectedInvoice.id].map((item, index) => (
-                    <tbody >
-                      <tr>
-                        <td className="border p-2">{item.description}</td>
-                        <td className="border p-2">{item.qty.toString()}</td>
-                        <td className="border p-2">{ethers.formatUnits(item.unitPrice)}</td>
-                        <td className="border p-2">{item.discount.toString()}</td>
-                        <td className="border p-2">{item.tax.toString()}</td>
-                        <td className="border p-2">
-                          {ethers.formatUnits(item.amount)} ETH
-                        </td>
-                      </tr>
-                    </tbody>
-                  ))
+                  invoiceItems[drawerState.selectedInvoice.id].map((item, index) => {
+                    console.log("Rendering item:", item);
+                    console.log("Item amount to display:", item.amount);
+
+                    return (
+                      <tbody>                        
+                          <tr key={index}>
+                            <td className="border p-2">{item.description}</td>
+                            <td className="border p-2">{Number(item.qty)}</td>
+                            <td className="border p-2">
+                              {ethers.formatUnits(item.unitPrice, 18)} 
+                            </td>
+                            <td className="border p-2">{ethers.formatUnits(item.discount)}</td>
+                            <td className="border p-2">{ethers.formatUnits(item.tax)}</td>
+                            <td className="border p-2">
+                              {ethers.formatUnits(item.amount)} ETH 
+                            </td>
+                          </tr>
+                      </tbody>
+
+
+                    );
+                  })
                 }
               </table>
               <div className="mt-4 text-xs">

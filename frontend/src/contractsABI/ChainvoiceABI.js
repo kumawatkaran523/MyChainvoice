@@ -1,4 +1,4 @@
-export const ChainvoiceABI =[
+export const ChainvoiceABI = [
 	{
 	  "type": "constructor",
 	  "inputs": [
