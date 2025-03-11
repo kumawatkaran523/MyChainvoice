@@ -25,6 +25,8 @@ contract Chainvoice {
     struct InvoiceDetails {
         uint256 id;
         address from;
+        string dueDate;
+        string issueDate;
         UserDetails user; // Struct to store user details
         address to;
         UserDetails client; // Struct to store client details
@@ -67,6 +69,8 @@ contract Chainvoice {
     function createInvoice(
         uint256 amountDue,
         address to,
+        string memory _dueDate,
+        string memory _issueDate,
         UserDetails memory user,
         UserDetails memory client,
         ItemData[] memory _items
@@ -80,6 +84,8 @@ contract Chainvoice {
             InvoiceDetails({
                 id: invoiceId,
                 from: msg.sender,
+                dueDate:_dueDate,
+                issueDate: _issueDate,
                 user: user,
                 to: to,
                 client: client,
