@@ -38,6 +38,16 @@ export const ChainvoiceABI = [
 		  "internalType": "address"
 		},
 		{
+		  "name": "_dueDate",
+		  "type": "string",
+		  "internalType": "string"
+		},
+		{
+		  "name": "_issueDate",
+		  "type": "string",
+		  "internalType": "string"
+		},
+		{
 		  "name": "user",
 		  "type": "tuple",
 		  "internalType": "struct Chainvoice.UserDetails",
@@ -192,6 +202,16 @@ export const ChainvoiceABI = [
 			  "internalType": "address"
 			},
 			{
+			  "name": "dueDate",
+			  "type": "string",
+			  "internalType": "string"
+			},
+			{
+			  "name": "issueDate",
+			  "type": "string",
+			  "internalType": "string"
+			},
+			{
 			  "name": "user",
 			  "type": "tuple",
 			  "internalType": "struct Chainvoice.UserDetails",
@@ -341,6 +361,16 @@ export const ChainvoiceABI = [
 			  "name": "from",
 			  "type": "address",
 			  "internalType": "address"
+			},
+			{
+			  "name": "dueDate",
+			  "type": "string",
+			  "internalType": "string"
+			},
+			{
+			  "name": "issueDate",
+			  "type": "string",
+			  "internalType": "string"
 			},
 			{
 			  "name": "user",
@@ -506,6 +536,16 @@ export const ChainvoiceABI = [
 		  "name": "from",
 		  "type": "address",
 		  "internalType": "address"
+		},
+		{
+		  "name": "dueDate",
+		  "type": "string",
+		  "internalType": "string"
+		},
+		{
+		  "name": "issueDate",
+		  "type": "string",
+		  "internalType": "string"
 		},
 		{
 		  "name": "user",

@@ -65,14 +65,12 @@ function SentInvoice() {
         console.log(ethers.formatUnits(fee));
         setFee(fee);
         setLoading(false);
-
       } catch (error) {
         alert(error);
       }
     }
     fetchSentInvoices();
   }, [walletClient]);
-
 
   const [drawerState, setDrawerState] = useState({ open: false, selectedInvoice: null });
 
@@ -138,7 +136,7 @@ function SentInvoice() {
                   {sentInvoices.length > 0 && sentInvoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((invoice, index) => (
                     <TableRow key={index} className="hover:bg-[#32363F] transition duration-300">
                       {columns.map((column) => {
-                        const value = invoice?.user[column.id];
+                        const value = invoice?.client[column.id];
                         if (column.id === "to") {
                           return (
                             <TableCell key={column.id} align={column.align} sx={{ color: "white", borderColor: "#25272b" }}>
@@ -226,8 +224,8 @@ function SentInvoice() {
               <div className="flex justify-between items-center">
                 <img src="/whiteLogo.png" alt="none" />
                 <div>
-                  <p className="text-gray-700 text-xs py-1">Issued on March 4, 2025</p>
-                  <p className="text-gray-700 text-xs">Payment due by April 3, 2025</p>
+                  <p className="text-gray-700 text-xs py-1">Issued by {drawerState.selectedInvoice.issueDate}</p>
+                  <p className="text-gray-700 text-xs">Payment Due by {drawerState.selectedInvoice.dueDate}</p>
                 </div>
               </div>
 
@@ -262,29 +260,20 @@ function SentInvoice() {
                   </tr>
                 </thead>
                 {
-                  invoiceItems[drawerState.selectedInvoice.id].map((item, index) => {
-                    console.log("Rendering item:", item);
-                    console.log("Item amount to display:", item.amount);
-
-                    return (
-                      <tbody>                        
-                          <tr key={index}>
-                            <td className="border p-2">{item.description}</td>
-                            <td className="border p-2">{Number(item.qty)}</td>
-                            <td className="border p-2">
-                              {ethers.formatUnits(item.unitPrice, 18)} 
-                            </td>
-                            <td className="border p-2">{ethers.formatUnits(item.discount)}</td>
-                            <td className="border p-2">{ethers.formatUnits(item.tax)}</td>
-                            <td className="border p-2">
-                              {ethers.formatUnits(item.amount)} ETH 
-                            </td>
-                          </tr>
-                      </tbody>
-
-
-                    );
-                  })
+                  invoiceItems[drawerState.selectedInvoice.id].map((item, index) => (
+                    <tbody key={index}>
+                      <tr>
+                        <td className="border p-2">{item.description}</td>
+                        <td className="border p-2">{item.qty.toString()}</td>
+                        <td className="border p-2">{ethers.formatUnits(item.unitPrice)}</td>
+                        <td className="border p-2">{item.discount.toString()}</td>
+                        <td className="border p-2">{item.tax.toString()}</td>
+                        <td className="border p-2">
+                          {ethers.formatUnits(item.amount)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  ))
                 }
               </table>
               <div className="mt-4 text-xs">

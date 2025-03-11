@@ -19,7 +19,7 @@ function CreateInvoice() {
   const { data: walletClient } = useWalletClient();
   const { isConnected } = useAccount();
   const account = useAccount();
-  const [dueDate, setDueDate] = useState();
+  const [dueDate, setDueDate] = useState(new Date());
   const [issueDate, setIssueDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -40,18 +40,19 @@ function CreateInvoice() {
       );
       const sanitizedItemData = data.itemData.map((item) => ({
         ...item,
-        qty: BigInt(item.qty),  
-        unitPrice: ethers.parseUnits(item.unitPrice.toString(), 18),
-        discount: ethers.parseUnits(item.discount.toString(), 18),
-        tax: ethers.parseUnits(item.tax.toString(), 18),
-        amount: BigInt(item.amount), 
+        qty: item.qty ? String(item.qty) : "0",
+        unitPrice: item.unitPrice ? ethers.parseUnits(String(item.unitPrice), 18) : ethers.parseUnits("0", 18),
+        discount: item.discount ? String(item.discount) : "0",
+        tax: item.tax ? String(item.tax) : "0",
+        amount: item.amount ? ethers.parseUnits(String(item.amount), 18) : ethers.parseUnits("0", 18),
       }));
 
       console.log(sanitizedItemData);
-
       const res = await contract.createInvoice(
-        totalAmountDue,  // No need to convert again
+        ethers.parseUnits(String(totalAmountDue), 18),
         data.clientAddress,
+        dueDate.toLocaleString(undefined,{timeZone:"Asia/Kolkata"}).toString(),
+        issueDate.toLocaleString(undefined,{timeZone:"Asia/Kolkata"}).toString(),
         [
           data.userFname,
           data.userLname,
@@ -70,11 +71,9 @@ function CreateInvoice() {
         ],
         sanitizedItemData
       );
-
-      setTimeout(() => {
+      setTimeout(()=>{
         navigate('/home/sent');
-      }, 4000);
-
+      },4000);
       console.log("Transaction successful", res);
     } catch (error) {
       console.error("Invoice creation error:", error);
@@ -141,11 +140,22 @@ function CreateInvoice() {
   const [totalAmountDue, setTotalAmountDue] = useState(0);
   const handleItemData = (e, index) => {
     const { name, value } = e.target;
-
+  
     setItemData((prevItemData) =>
-      prevItemData.map((item, i) =>
-        i === index ? { ...item, [name]: value } : item
-      )
+      prevItemData.map((item, i) => {
+        if (i === index) {
+          const updatedItem = { ...item, [name]: value };
+          if (name === 'qty' || name === 'unitPrice' || name === 'discount' || name === 'tax') {
+            const qty = parseFloat(updatedItem.qty) || 0;
+            const unitPrice = parseFloat(updatedItem.unitPrice) || 0;
+            const discount = parseFloat(updatedItem.discount) || 0;
+            const tax = parseFloat(updatedItem.tax) || 0;
+            updatedItem.amount = (qty * unitPrice - discount + tax).toString();
+          }
+          return updatedItem;
+        }
+        return item;
+      })
     );
   };
 
@@ -162,35 +172,12 @@ function CreateInvoice() {
   };
 
   useEffect(() => {
-    if (!itemData || itemData.length === 0) return;
+    let total = itemData.reduce((sum, item) => {
+      return sum + ((parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0) - (parseFloat(item.discount) || 0) + (parseFloat(item.tax) || 0));
+    }, 0);
 
-    const updatedItemData = itemData.map((item) => {
-      const qty = item.qty && item.qty !== "" ? parseFloat(item.qty) : 0;
-      const unitPrice = item.unitPrice && item.unitPrice !== "" ? parseFloat(item.unitPrice) : 0;
-      const discount = item.discount && item.discount !== "" ? parseFloat(item.discount) : 0;
-      const tax = item.tax && item.tax !== "" ? parseFloat(item.tax) : 0;
-
-      const amount = (qty * unitPrice) - discount + tax;
-      const amountInWei = ethers.parseUnits(amount.toString(), 18);  
-
-      return {
-        ...item,
-        qty,
-        unitPrice,
-        discount,
-        tax,
-        amount: amountInWei, 
-      };
-    });
-
-    setItemData(updatedItemData);
-
-    const totalAmount = updatedItemData.reduce((sum, item) => sum + parseFloat(ethers.formatUnits(item.amount, 18)), 0);
-    setTotalAmountDue(totalAmount);
-
+    setTotalAmountDue(total);
   }, [itemData]);
-
-
 
   return (
     <div className='font-Inter '>
@@ -212,13 +199,14 @@ function CreateInvoice() {
 
         <p> Due Date </p>
         <Popover>
-          <PopoverTrigger asChild>
+          <PopoverTrigger asChild >
             <Button
               // variant={"outline"}
               className={cn(
                 "w-[260px] justify-start text-left font-normal bg-white text-black hover:bg-white",
                 !dueDate && "text-muted-foreground"
               )}
+              
             >
               <CalendarIcon className='' />
               {dueDate ? format(dueDate, "PPP") : <span className=''>Pick a due date</span>}
