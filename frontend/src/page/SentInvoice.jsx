@@ -27,7 +27,7 @@ import {
 const columns = [
   { id: "fname", label: "First Name", minWidth: 100 },
   { id: "lname", label: "Last Name", minWidth: 100 },
-  { id: "to", label: "Address", minWidth: 200 },
+  { id: "to", label: "Receiver's Address", minWidth: 200 },
   { id: "email", label: "Email", minWidth: 170 },
   { id: "country", label: "Country", minWidth: 100 },
   { id: "city", label: "City", minWidth: 100 },
@@ -185,6 +185,8 @@ function SentInvoice() {
     };
 
     fetchSentInvoices();
+
+    console.log("invoices : ", sentInvoices);
   }, [walletClient]);
 
   const [drawerState, setDrawerState] = useState({
@@ -193,6 +195,7 @@ function SentInvoice() {
   });
 
   const toggleDrawer = (invoice) => (event) => {
+    console.log(invoice);
     if (
       event &&
       event.type === "keydown" &&
@@ -298,12 +301,12 @@ function SentInvoice() {
                                     borderColor: "#25272b",
                                   }}
                                 >
-                                  {invoice.to
-                                    ? `${invoice.to.substring(
+                                  {invoice.client.address
+                                    ? `${invoice.client.address.substring(
                                         0,
                                         10
-                                      )}...${invoice.to.substring(
-                                        invoice.to.length - 10
+                                      )}...${invoice.client.address.substring(
+                                        invoice.client.address.length - 10
                                       )}`
                                     : "N/A"}
                                 </TableCell>
@@ -443,7 +446,7 @@ function SentInvoice() {
               <div className="mb-4">
                 <h2 className="text-sm font-semibold">From</h2>
                 <p className="text-gray-700 text-xs">
-                  {drawerState.selectedInvoice.from}
+                  {drawerState.selectedInvoice.user.address}
                 </p>
                 <p className="text-gray-700 text-xs">{`${drawerState.selectedInvoice.user.fname} ${drawerState.selectedInvoice.user.lname}`}</p>
                 <p className="text-blue-500 underline text-xs">
@@ -455,7 +458,7 @@ function SentInvoice() {
               <div className="mb-4">
                 <h2 className="text-sm font-semibold">Billed to</h2>
                 <p className="text-gray-700 text-xs">
-                  {drawerState.selectedInvoice.from}
+                  {drawerState.selectedInvoice.client.from}
                 </p>
                 <p className="text-gray-700 text-xs">{`${drawerState.selectedInvoice.client.fname} ${drawerState.selectedInvoice.client.lname}`}</p>
                 <p className="text-blue-500 underline text-xs">
@@ -474,45 +477,40 @@ function SentInvoice() {
                     <th className=" p-2">Amount</th>
                   </tr>
                 </thead>
-                {invoiceItems[drawerState.selectedInvoice.id].map(
-                  (item, index) => (
-                    <tbody key={index}>
-                      <tr>
-                        <td className="border p-2">{item.description}</td>
-                        <td className="border p-2">{item.qty.toString()}</td>
-                        <td className="border p-2">
-                          {ethers.formatUnits(item.unitPrice)}
-                        </td>
-                        <td className="border p-2">
-                          {item.discount.toString()}
-                        </td>
-                        <td className="border p-2">{item.tax.toString()}</td>
-                        <td className="border p-2">
-                          {ethers.formatUnits(item.amount)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  )
-                )}
+                {drawerState.selectedInvoice?.items?.map((item, index) => (
+                  <tbody key={index}>
+                    <tr>
+                      <td className="border p-2">{item.description}</td>
+                      <td className="border p-2">{item.qty.toString()}</td>
+                      <td className="border p-2">
+                        {/* {ethers.formatUnits(item.unitPrice)} */}
+                        {item.unitPrice}
+                      </td>
+                      <td className="border p-2">{item.discount.toString()}</td>
+                      <td className="border p-2">{item.tax.toString()}</td>
+                      <td className="border p-2">
+                        {/* {ethers.formatUnits(item.amount)} */}
+                        {item.amount}
+                      </td>
+                    </tr>
+                  </tbody>
+                ))}
               </table>
               <div className="mt-4 text-xs">
                 <p className="text-right font-semibold">
-                  Fee for invoice pay : {ethers.formatUnits(fee)} ETH
+                  Fee for invoice pay : {parseFloat(ethers.formatUnits(fee))} ETH
+                  {/* Fee for invoice pay : {ethers.formatUnits(fee)} ETH */}
                 </p>
                 <p className="text-right font-semibold">
                   {" "}
                   Amount:{" "}
-                  {ethers.formatUnits(
-                    drawerState.selectedInvoice.amountDue
-                  )}{" "}
-                  ETH
+                  {/* {ethers.formatUnits(drawerState.selectedInvoice.amountDue)}{" "} */}
+                  {drawerState.selectedInvoice.amountDue} ETH
                 </p>
                 <p className="text-right font-semibold">
-                  {" "}
                   Total Amount:{" "}
-                  {ethers.formatUnits(
-                    drawerState.selectedInvoice.amountDue + fee
-                  )}{" "}
+                  {parseFloat(drawerState.selectedInvoice.amountDue) +
+                    parseFloat(ethers.formatUnits(fee))}{" "}
                   ETH
                 </p>
               </div>

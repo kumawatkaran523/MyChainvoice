@@ -115,13 +115,16 @@ function CreateInvoice() {
       setLoading(true);
       const provider = new BrowserProvider(walletClient);
       const signer = await provider.getSigner();
-
+      
+      console.log("data >>>>>> ", data);
+      console.log("acc :",account.address)
       // 1. Prepare invoice data
       const invoicePayload = {
         amountDue: totalAmountDue,
         dueDate,
         issueDate,
         user: {
+          address: account?.address.toString(),
           fname: data.userFname,
           lname: data.userLname,
           email: data.userEmail,
@@ -130,6 +133,7 @@ function CreateInvoice() {
           postalcode: data.userPostalcode,
         },
         client: {
+          address: data.clientAddress,
           fname: data.clientFname,
           lname: data.clientLname,
           email: data.clientEmail,
@@ -197,9 +201,7 @@ function CreateInvoice() {
           expiration,
           resourceAbilityRequests,
         }) => {
-          // Await the nonce!
           const nonce = await litNodeClient.getLatestBlockhash();
-          // Use createSiweMessageWithRecaps for correct resource handling
           const toSign = await createSiweMessageWithRecaps({
             uri,
             expiration,
@@ -338,7 +340,7 @@ function CreateInvoice() {
             <Input
               value={account?.address}
               className="w-[500px] outline-none border-gray-400 focus:border-green-400 transition duration-500 shadow-2xl"
-              disabled
+              readOnly
               name="userAddress"
             />
             <div className="mt-4">
