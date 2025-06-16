@@ -458,7 +458,7 @@ function SentInvoice() {
               <div className="mb-4">
                 <h2 className="text-sm font-semibold">Billed to</h2>
                 <p className="text-gray-700 text-xs">
-                  {drawerState.selectedInvoice.client.from}
+                  {drawerState.selectedInvoice.client.address}
                 </p>
                 <p className="text-gray-700 text-xs">{`${drawerState.selectedInvoice.client.fname} ${drawerState.selectedInvoice.client.lname}`}</p>
                 <p className="text-blue-500 underline text-xs">
@@ -498,7 +498,7 @@ function SentInvoice() {
               </table>
               <div className="mt-4 text-xs">
                 <p className="text-right font-semibold">
-                  Fee for invoice pay : {parseFloat(ethers.formatUnits(fee))} ETH
+                  Fee for invoice pay : {fee} ETH
                   {/* Fee for invoice pay : {ethers.formatUnits(fee)} ETH */}
                 </p>
                 <p className="text-right font-semibold">

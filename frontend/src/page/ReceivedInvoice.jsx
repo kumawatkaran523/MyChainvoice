@@ -26,7 +26,7 @@ import {
 const columns = [
   { id: "fname", label: "First Name", minWidth: 100 },
   { id: "lname", label: "Last Name", minWidth: 100 },
-  { id: "to", label: "Address", minWidth: 200 },
+  { id: "to", label: "Sender's address", minWidth: 200 },
   { id: "email", label: "Email", minWidth: 170 },
   // { id: 'country', label: 'Country', minWidth: 100 },
   { id: "amountDue", label: "Total Amount", minWidth: 100, align: "right" },
@@ -55,7 +55,7 @@ function ReceivedInvoice() {
   const [invoiceItems, setInvoiceItems] = useState([]);
 
   const [fee, setFee] = useState(0);
- 
+
   useEffect(() => {
     if (!walletClient) return;
 
@@ -82,39 +82,24 @@ function ReceivedInvoice() {
         const res = await contract.getReceivedInvoices(address);
         console.log("getReceivedInvoices raw response:", res);
 
-        if (!res || !Array.isArray(res) || res.length !== 2) {
-          console.warn("Unexpected contract response format.");
-          setReceivedInvoice([]);
-          setInvoiceItems([]);
-          setLoading(false);
-          return;
-        }
-
-        const [invoiceDetails, itemData] = res;
-
-        if (!Array.isArray(invoiceDetails) || invoiceDetails.length === 0) {
-          console.log("No received invoices.");
-          setReceivedInvoice([]);
-          setInvoiceItems([]);
-          setLoading(false);
-          return;
-        }
+        console.log(typeof res);
+        // if (!res || !Array.isArray(res) || res.length !== 2) {
+        //   console.warn("Unexpected contract response format.");
+        //   setReceivedInvoice([]);
+        //   setInvoiceItems([]);
+        //   setLoading(false);
+        //   return;
+        // }
 
         const decryptedInvoices = [];
+        const allItems = [];
+        for (const invoice of res) {
+          // Access like array, not object
+          const encryptedStringBase64 = invoice[4]; // encryptedData
+          console.log("yaha tak", encryptedStringBase64);
 
-        for (const invoice of invoiceDetails) {
-          const encryptedStringBase64 = invoice.encryptedData;
-          const encryptedSymmetricKeyBase64 = invoice.encryptedSymmetricKey;
-
-          if (!encryptedStringBase64 || !encryptedSymmetricKeyBase64) continue;
-
+          if (!encryptedStringBase64) continue;
           const ciphertext = atob(encryptedStringBase64);
-          const encryptedSymmetricKey = Uint8Array.from(
-            atob(encryptedSymmetricKeyBase64)
-              .split("")
-              .map((c) => c.charCodeAt(0))
-          );
-
           const accessControlConditions = [
             {
               contractAddress: "",
@@ -124,7 +109,7 @@ function ReceivedInvoice() {
               parameters: [":userAddress"],
               returnValueTest: {
                 comparator: "=",
-                value: invoice.from.toLowerCase(),
+                value: invoice[1].toLowerCase(), // from
               },
             },
             { operator: "or" },
@@ -136,17 +121,13 @@ function ReceivedInvoice() {
               parameters: [":userAddress"],
               returnValueTest: {
                 comparator: "=",
-                value: invoice.to.toLowerCase(),
+                value: invoice[2].toLowerCase(), // to
               },
             },
           ];
 
-          const dataToEncryptHash =
-            await LitAccessControlConditionResource.generateResourceId({
-              accessControlConditions,
-              resourceIdType: "accessControlCondition",
-            });
-
+          const dataToEncryptHash = invoice[5];
+          // 5. Get session sigs for this invoice
           const sessionSigs = await litNodeClient.getSessionSigs({
             chain: "ethereum",
             resourceAbilityRequests: [
@@ -169,8 +150,10 @@ function ReceivedInvoice() {
                 nonce,
                 litNodeClient,
               });
-
-              return await generateAuthSig({ signer, toSign });
+              return await generateAuthSig({
+                signer,
+                toSign,
+              });
             },
           });
 
@@ -181,16 +164,16 @@ function ReceivedInvoice() {
               ciphertext,
               dataToEncryptHash,
               sessionSigs,
-              encryptedSymmetricKey,
             },
             litNodeClient
           );
 
           decryptedInvoices.push(JSON.parse(decryptedString));
+          allItems.push(null); // 🔄 or actual items if stored elsewhere
         }
-
+        console.log("decrypted : ", decryptedInvoices);
         setReceivedInvoice(decryptedInvoices);
-        setInvoiceItems(itemData);
+        setInvoiceItems(allItems);
 
         const fee = await contract.fee();
         setFee(fee);
@@ -203,9 +186,9 @@ function ReceivedInvoice() {
     };
 
     fetchReceivedInvoices();
+    console.log("invoices : ", receivedInvoices);
   }, [walletClient]);
-  
-  
+
   const payInvoice = async (id, amountDue) => {
     try {
       if (!walletClient) return;
@@ -323,7 +306,6 @@ function ReceivedInvoice() {
                         className="hover:bg-[#32363F] transition duration-300"
                       >
                         {columns.map((column) => {
-                          console.log(invoice.to);
                           const value = invoice.user[column.id] || "";
                           if (column.id === "to") {
                             return (
@@ -332,8 +314,14 @@ function ReceivedInvoice() {
                                 align={column.align}
                                 sx={{ color: "white", borderColor: "#25272b" }}
                               >
-                                {invoice.to.substring(0, 10)}...
-                                {invoice.to.substring(invoice.to.length - 10)}
+                                {invoice.user.address
+                                  ? `${invoice.user.address.substring(
+                                      0,
+                                      10
+                                    )}...${invoice.user.address.substring(
+                                      invoice.user.address.length - 10
+                                    )}`
+                                  : "N/A"}
                               </TableCell>
                             );
                           }
@@ -344,7 +332,8 @@ function ReceivedInvoice() {
                                 align={column.align}
                                 sx={{ color: "white", borderColor: "#25272b" }}
                               >
-                                {ethers.formatUnits(invoice.amountDue)} ETH
+                                {/* {ethers.formatUnits(invoice.amountDue)} ETH */}
+                                {invoice.amountDue} ETH
                               </TableCell>
                             );
                           }
@@ -481,10 +470,10 @@ function ReceivedInvoice() {
                 <img src="/whiteLogo.png" alt="none" />
                 <div>
                   <p className="text-gray-700 text-xs py-1">
-                    Issued on March 4, 2025
+                    Issued by {drawerState.selectedInvoice.issueDate}
                   </p>
                   <p className="text-gray-700 text-xs">
-                    Payment due by April 3, 2025
+                    Payment Due by {drawerState.selectedInvoice.dueDate}
                   </p>
                 </div>
               </div>
@@ -498,7 +487,7 @@ function ReceivedInvoice() {
               <div className="mb-4">
                 <h2 className="text-sm font-semibold">From</h2>
                 <p className="text-gray-700 text-xs">
-                  {drawerState.selectedInvoice.from}
+                  {drawerState.selectedInvoice.client.from}
                 </p>
                 <p className="text-gray-700 text-xs">{`${drawerState.selectedInvoice.user.fname} ${drawerState.selectedInvoice.user.lname}`}</p>
                 <p className="text-blue-500 underline text-xs">
@@ -510,7 +499,7 @@ function ReceivedInvoice() {
               <div className="mb-4">
                 <h2 className="text-sm font-semibold">Billed to</h2>
                 <p className="text-gray-700 text-xs">
-                  {drawerState.selectedInvoice.from}
+                  {drawerState.selectedInvoice.client.address}
                 </p>
                 <p className="text-gray-700 text-xs">{`${drawerState.selectedInvoice.client.fname} ${drawerState.selectedInvoice.client.lname}`}</p>
                 <p className="text-blue-500 underline text-xs">
@@ -529,45 +518,41 @@ function ReceivedInvoice() {
                     <th className=" p-2">Amount</th>
                   </tr>
                 </thead>
-                {invoiceItems[drawerState.selectedInvoice.id].map(
-                  (item, index) => (
-                    <tbody>
-                      <tr>
-                        <td className="border p-2">{item.description}</td>
-                        <td className="border p-2">{item.qty.toString()}</td>
-                        <td className="border p-2">
-                          {ethers.formatUnits(item.unitPrice)}
-                        </td>
-                        <td className="border p-2">
-                          {item.discount.toString()}
-                        </td>
-                        <td className="border p-2">{item.tax.toString()}</td>
-                        <td className="border p-2">
-                          {ethers.formatUnits(item.amount)} ETH
-                        </td>
-                      </tr>
-                    </tbody>
-                  )
-                )}
+                {drawerState.selectedInvoice?.items?.map((item, index) => (
+                  <tbody>
+                    <tr>
+                      <td className="border p-2">{item.description}</td>
+                      <td className="border p-2">{item.qty.toString()}</td>
+                      <td className="border p-2">
+                        {/* {ethers.formatUnits(item.unitPrice)} */}
+                        {item.unitPrice}
+                      </td>
+                      <td className="border p-2">{item.discount.toString()}</td>
+                      <td className="border p-2">{item.tax.toString()}</td>
+                      <td className="border p-2">
+                        {item.amount} ETH
+                        {/* {ethers.formatUnits(item.amount)} ETH */}
+                      </td>
+                    </tr>
+                  </tbody>
+                ))}
               </table>
               <div className="mt-4 text-xs">
                 <p className="text-right font-semibold">
-                  Fee for invoice pay : {ethers.formatUnits(fee)} ETH
-                </p>
-                <p className="text-right font-semibold">
-                  {" "}
-                  Amount:{" "}
-                  {ethers.formatUnits(
-                    drawerState.selectedInvoice.amountDue
-                  )}{" "}
+                  {/* Fee for invoice pay : {ethers.formatUnits(fee)} ETH                  Fee for invoice pay : {parseFloat(ethers.formatUnits(fee))} ETH */}
+                  Fee for invoice pay : {parseFloat(ethers.formatUnits(fee))}{" "}
                   ETH
                 </p>
                 <p className="text-right font-semibold">
                   {" "}
+                  Amount: {drawerState.selectedInvoice.amountDue}{" "}
+                  {/* {ethers.formatUnits(drawerState.selectedInvoice.amountDue)}{" "} */}
+                  ETH
+                </p>
+                <p className="text-right font-semibold">
                   Total Amount:{" "}
-                  {ethers.formatUnits(
-                    drawerState.selectedInvoice.amountDue + fee
-                  )}{" "}
+                  {parseFloat(drawerState.selectedInvoice.amountDue) +
+                    parseFloat(ethers.formatUnits(fee))}{" "}
                   ETH
                 </p>
               </div>
