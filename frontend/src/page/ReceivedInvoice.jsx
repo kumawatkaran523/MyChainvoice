@@ -93,13 +93,17 @@ function ReceivedInvoice() {
 
         const decryptedInvoices = [];
         const allItems = [];
-        for (const invoice of res) {
-          // Access like array, not object
-          const encryptedStringBase64 = invoice[4]; // encryptedData
-          console.log("yaha tak", encryptedStringBase64);
 
-          if (!encryptedStringBase64) continue;
+        for (const invoice of res) {
+          const id = invoice[0];
+          const isPaid = invoice[3];
+          const encryptedStringBase64 = invoice[4]; // encryptedData
+          const dataToEncryptHash = invoice[5];
+
+          if (!encryptedStringBase64 || !dataToEncryptHash) continue;
+
           const ciphertext = atob(encryptedStringBase64);
+
           const accessControlConditions = [
             {
               contractAddress: "",
@@ -126,8 +130,6 @@ function ReceivedInvoice() {
             },
           ];
 
-          const dataToEncryptHash = invoice[5];
-          // 5. Get session sigs for this invoice
           const sessionSigs = await litNodeClient.getSessionSigs({
             chain: "ethereum",
             resourceAbilityRequests: [
@@ -150,10 +152,7 @@ function ReceivedInvoice() {
                 nonce,
                 litNodeClient,
               });
-              return await generateAuthSig({
-                signer,
-                toSign,
-              });
+              return await generateAuthSig({ signer, toSign });
             },
           });
 
@@ -168,9 +167,13 @@ function ReceivedInvoice() {
             litNodeClient
           );
 
-          decryptedInvoices.push(JSON.parse(decryptedString));
-          allItems.push(null); // 🔄 or actual items if stored elsewhere
+          const parsed = JSON.parse(decryptedString);
+          parsed["id"] = id;
+          parsed["isPaid"] = isPaid;
+          decryptedInvoices.push(parsed);
+          allItems.push(null); // placeholder
         }
+
         console.log("decrypted : ", decryptedInvoices);
         setReceivedInvoice(decryptedInvoices);
         setInvoiceItems(allItems);
@@ -199,11 +202,15 @@ function ReceivedInvoice() {
         ChainvoiceABI,
         signer
       );
-      console.log(amountDue);
+      console.log(ethers.parseUnits(String(amountDue), 18));
       const fee = await contract.fee();
       console.log(fee);
-      const res = await contract.payInvoice(ethers.toBigInt(id), {
-        value: amountDue + fee,
+      const amountDueInWei = ethers.parseUnits(String(amountDue), 18); 
+      const feeInWei = BigInt(fee); 
+      const total = amountDueInWei + feeInWei;
+
+      const res = await contract.payInvoice(BigInt(id), {
+        value: total,
       });
     } catch (error) {
       console.log(error);
@@ -480,7 +487,7 @@ function ReceivedInvoice() {
 
               <div className="border-b border-green-500 pb-4 mb-4">
                 <h1 className="text-sm font-bold">
-                  Invoice #{drawerState.selectedInvoice.id}
+                  Invoice # {drawerState.selectedInvoice.id.toString()}
                 </h1>
               </div>
 
@@ -539,8 +546,10 @@ function ReceivedInvoice() {
               </table>
               <div className="mt-4 text-xs">
                 <p className="text-right font-semibold">
-                  {/* Fee for invoice pay : {ethers.formatUnits(fee)} ETH                  Fee for invoice pay : {parseFloat(ethers.formatUnits(fee))} ETH */}
-                  Fee for invoice pay : {parseFloat(ethers.formatUnits(fee))}{" "}
+                  {/* Fee for invoice pay : {ethers.formatUnits(fee)} ETH */}
+                  Fee for invoice pay : {parseFloat(
+                    ethers.formatUnits(fee)
+                  )}{" "}
                   ETH
                 </p>
                 <p className="text-right font-semibold">

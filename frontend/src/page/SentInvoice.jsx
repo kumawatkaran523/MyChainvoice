@@ -93,13 +93,14 @@ function SentInvoice() {
         const allItems = [];
 
         for (const invoice of res) {
-          // Access like array, not object
+          const id = invoice[0];
+          const isPaid = invoice[3];
           const encryptedStringBase64 = invoice[4]; // encryptedData
+          const dataToEncryptHash = invoice[5];
 
-          if (!encryptedStringBase64) continue;
+          if (!encryptedStringBase64 || !dataToEncryptHash) continue;
 
           const ciphertext = atob(encryptedStringBase64);
-
           const accessControlConditions = [
             {
               contractAddress: "",
@@ -126,8 +127,6 @@ function SentInvoice() {
             },
           ];
 
-          const dataToEncryptHash = invoice[5];
-          // 5. Get session sigs for this invoice
           const sessionSigs = await litNodeClient.getSessionSigs({
             chain: "ethereum",
             resourceAbilityRequests: [
@@ -150,10 +149,7 @@ function SentInvoice() {
                 nonce,
                 litNodeClient,
               });
-              return await generateAuthSig({
-                signer,
-                toSign,
-              });
+              return await generateAuthSig({ signer, toSign });
             },
           });
 
@@ -168,8 +164,11 @@ function SentInvoice() {
             litNodeClient
           );
 
-          decryptedInvoices.push(JSON.parse(decryptedString));
-          allItems.push(null); // 🔄 or actual items if stored elsewhere
+          const parsed = JSON.parse(decryptedString);
+          parsed["id"] = id;
+          parsed["isPaid"] = isPaid;
+          decryptedInvoices.push(parsed);
+          allItems.push(null); // placeholder
         }
 
         setSentInvoices(decryptedInvoices);
@@ -439,7 +438,7 @@ function SentInvoice() {
 
               <div className="border-b border-green-500 pb-4 mb-4">
                 <h1 className="text-sm font-bold">
-                  Invoice #{drawerState.selectedInvoice.id}
+                  Invoice # {drawerState.selectedInvoice.id.toString()}
                 </h1>
               </div>
 
