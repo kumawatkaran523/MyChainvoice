@@ -277,7 +277,7 @@ function ReceivedInvoice() {
         }}
       >
         {loading ? (
-          <p>loading........</p>
+          <p >loading........</p>
         ) : receivedInvoices?.length > 0 ? (
           <>
             <TableContainer sx={{ maxHeight: 540 }}>

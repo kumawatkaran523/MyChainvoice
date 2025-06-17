@@ -238,7 +238,7 @@ function SentInvoice() {
 
   return (
     <div>
-      <h2 className="text-lg font-bold">Your Sent Invoice Request</h2>
+      <h2 className="text-lg font-bold m-3">Your Sent Invoice Request</h2>
       <Paper
         sx={{
           width: "100%",
