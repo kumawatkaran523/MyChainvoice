@@ -7,7 +7,7 @@ contract Chainvoice {
         address from;
         address to;
         bool isPaid;
-        string encryptedInvoiceData; //  Base64-encoded ciphertext
+        string encryptedInvoiceData; 
         string encryptedHash;
     }
 
