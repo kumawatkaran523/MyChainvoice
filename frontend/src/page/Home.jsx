@@ -6,9 +6,6 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import PendingIcon from '@mui/icons-material/Pending';
-import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import DraftsIcon from "@mui/icons-material/Drafts";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
@@ -134,7 +131,7 @@ export default function Home() {
               
               transition: "all 0.3s ease",
             }}
-            className="text-white border-l-2 border-l-gray-700"
+            className="text-white border-l-2 border-gray-800"
           >
             <Outlet />
           </Box>

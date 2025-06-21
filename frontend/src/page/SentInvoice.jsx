@@ -127,6 +127,7 @@ function SentInvoice() {
             },
           ];
 
+          console.log("access control : ",accessControlConditions);
           const sessionSigs = await litNodeClient.getSessionSigs({
             chain: "ethereum",
             resourceAbilityRequests: [
@@ -149,10 +150,12 @@ function SentInvoice() {
                 nonce,
                 litNodeClient,
               });
+              console.log("tosign ",toSign,nonce)
               return await generateAuthSig({ signer, toSign });
             },
           });
 
+          console.log("session : ",sessionSigs)
           const decryptedString = await decryptToString(
             {
               accessControlConditions,
@@ -497,7 +500,8 @@ function SentInvoice() {
               </table>
               <div className="mt-4 text-xs">
                 <p className="text-right font-semibold">
-                  Fee for invoice pay : {fee} ETH
+                  Fee for invoice pay : {parseFloat(ethers.formatUnits(fee))}{" "}
+                  ETH
                   {/* Fee for invoice pay : {ethers.formatUnits(fee)} ETH */}
                 </p>
                 <p className="text-right font-semibold">
