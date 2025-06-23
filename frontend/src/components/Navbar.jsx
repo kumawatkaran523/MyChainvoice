@@ -1,3 +1,4 @@
+// Updated Navbar.js
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -17,9 +18,24 @@ function Navbar() {
   const [hasConnected, setHasConnected] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // Improved active route detection
+  const isActive = (path) => {
+    if (path.startsWith("/#")) {
+      return location.pathname === "/" && location.hash === path.substring(1);
+    }
+    return (
+      location.pathname.startsWith(path) &&
+      (path !== "/" || location.pathname === "/")
+    );
+  };
+
   useEffect(() => {
-    if (address && !hasConnected && location.pathname !== "/home/sent") {
-      navigate("/home/sent");
+    if (
+      address &&
+      !hasConnected &&
+      !location.pathname.startsWith("/dashboard")
+    ) {
+      navigate("/dashboard/create");
       setHasConnected(true);
     }
     if (!address) {
@@ -62,16 +78,19 @@ function Navbar() {
       name: "Home",
       icon: <HomeIcon className="text-current" />,
       action: () => handleScroll("home-section"),
+      path: "/",
     },
     {
       name: "Features",
       icon: <FeaturedPlayListIcon className="text-current" />,
       action: () => handleScroll("feature-section"),
+      path: "/#feature-section",
     },
     {
       name: "Services",
       icon: <DesignServicesIcon className="text-current" />,
       action: () => handleScroll("service-section"),
+      path: "/#service-section",
     },
   ];
 
@@ -79,7 +98,12 @@ function Navbar() {
     {
       name: "Dashboard",
       icon: <DashboardIcon className="text-current" />,
-      path: "/home/sent",
+      path: "/dashboard",
+      activePaths: [
+        "/dashboard/create",
+        "/dashboard/sent",
+        "/dashboard/pending",
+      ],
     },
     {
       name: "Treasure",
@@ -87,7 +111,6 @@ function Navbar() {
       path: "/treasure",
     },
   ];
-
   return (
     <motion.div
       initial={{ y: -100 }}
@@ -101,28 +124,30 @@ function Navbar() {
     >
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-24">
-          {/* Logo with animation */}
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center space-x-2 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            {/* <FaEthereum className="text-green-500 text-3xl" /> */}
             <img src="/logo.png" alt="logo" width={50} />
-            <span className="text-3xl font-bold text-green-500">Chain</span>
-            <span className="text-3xl font-bold text-white">voice</span>
+            <p className="text-3xl font-bold text-green-500">
+              Cha<span className="text-3xl font-bold text-white">in</span>voice
+            </p>
           </motion.div>
 
-          {/* Navigation Items */}
           <div className="hidden md:flex items-center space-x-2">
-            {navItems.map((item, index) => (
+            {navItems.map((item) => (
               <motion.button
                 key={item.name}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={item.action}
-                className="flex items-center px-4 py-2 rounded-lg text-white hover:text-green-400 transition-colors"
+                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                  isActive(item.path)
+                    ? "text-green-400 font-medium"
+                    : "text-white hover:text-green-400"
+                }`}
               >
                 <span className="mr-2">{item.icon}</span>
                 {item.name}
@@ -136,13 +161,31 @@ function Navbar() {
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Link
-                    to={item.path}
-                    className="flex items-center px-4 py-2 rounded-lg text-white hover:text-green-400 transition-colors"
-                  >
-                    <span className="mr-2">{item.icon}</span>
-                    {item.name}
-                  </Link>
+                  {item?.path === "/dashboard" ? (
+                    <Link
+                      to='/dashboard/create'
+                      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                        isActive(item.path)
+                          ? "text-green-400 font-medium"
+                          : "text-white hover:text-green-400"
+                      }`}
+                    >
+                      <span className="mr-2">{item.icon}</span>
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                        isActive(item.path)
+                          ? "text-green-400 font-medium"
+                          : "text-white hover:text-green-400"
+                      }`}
+                    >
+                      <span className="mr-2">{item.icon}</span>
+                      {item.name}
+                    </Link>
+                  )}
                 </motion.div>
               ))}
 

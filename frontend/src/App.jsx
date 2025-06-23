@@ -35,7 +35,7 @@ import { Toaster } from "react-hot-toast";
 function App() {
   return (
     <div className="bg-[#161920]">
-      <Toaster position="top-right" />
+      <Toaster position="top-center" reverseOrder={false} />
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider
@@ -54,7 +54,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Applayout />}>
                     <Route index element={<Landing />} />
-                    <Route path="home" element={<Home />}>
+                    <Route path="dashboard" element={<Home />}>
                       <Route path="create" element={<CreateInvoice />} />
                       <Route path="sent" element={<SentInvoice />} />
                       <Route path="pending" element={<ReceivedInvoice />} />

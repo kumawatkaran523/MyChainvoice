@@ -24,6 +24,7 @@ import {
   generateAuthSig,
   LitAccessControlConditionResource,
 } from "@lit-protocol/auth-helpers";
+import toast from "react-hot-toast";
 
 function CreateInvoice() {
   const { data: walletClient } = useWalletClient();
@@ -33,7 +34,11 @@ function CreateInvoice() {
   const [issueDate, setIssueDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  const [transactionStatus, setTransactionStatus] = useState({
+    success: false,
+    message: "",
+  });
+  
   const [itemData, setItemData] = useState([
     {
       description: "",
@@ -109,6 +114,7 @@ function CreateInvoice() {
 
     try {
       setLoading(true);
+      setTransactionStatus({ success: false, message: "" });
       const provider = new BrowserProvider(walletClient);
       const signer = await provider.getSigner();
 
@@ -229,12 +235,12 @@ function CreateInvoice() {
         encryptedStringBase64,
         dataToEncryptHash
       );
+      const receipt = await tx.wait();
+      console.log("Transaction receipt:", receipt);
 
-      console.log("Invoice created:", tx);
-      setTimeout(() => navigate("/home/sent"), 4000);
+      setTimeout(() => navigate("/dashboard/sent"), 4000);
     } catch (err) {
       console.error("Encryption or transaction failed:", err);
-      alert("Failed to create invoice.");
     } finally {
       setLoading(false);
     }
@@ -284,12 +290,11 @@ function CreateInvoice() {
   };
 
   return (
-    <div className="font-Inter px-4 sm:px-6 lg:px-8">
+    <div className="font-Inter ">
       <h2 className="text-2xl font-bold mb-6 text-white">
         Create New Invoice Request
       </h2>
 
-      {/* Invoice Header Section */}
       <div className="flex flex-wrap items-center gap-4 mb-8 bg-gray-50 p-4 rounded-lg shadow-sm">
         <div className="flex items-center space-x-2">
           <Label className="text-md font-medium text-gray-700">Invoice #</Label>
@@ -355,7 +360,6 @@ function CreateInvoice() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* From and Client Information Sections */}
         <div className="flex flex-col lg:flex-row gap-6 mb-8">
           {/* Your Information */}
           <div className="border border-gray-200 flex-1 p-6 rounded-lg shadow-sm bg-white">
@@ -621,7 +625,6 @@ function CreateInvoice() {
                   />
                 </div>
 
-                {/* Delete Button (only shown for items after the first one) */}
                 {index > 0 && (
                   <button
                     type="button"
@@ -662,7 +665,7 @@ function CreateInvoice() {
               Add Item
             </Button>
 
-            <div className="bg-gray-50 p-4 rounded-lg w-full md:w-1/3">
+            <div className="bg-gray-50 p-2 rounded-lg w-full md:w-1/3">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-medium text-gray-700">Total:</span>
                 <span className="font-bold text-lg text-black">
@@ -675,23 +678,20 @@ function CreateInvoice() {
 
         {/* Form Actions */}
         <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 mt-6">
-          {loading ? (
-            <Button
-              className="bg-green-500 hover:bg-green-700 px-8 py-2 text-white flex items-center gap-2"
-              type="submit"
-              disabled
-            >
-              <Loader2 className="animate-spin h-5 w-5" />
-              Creating Invoice...
-            </Button>
-          ) : (
-            <Button
-              className="bg-green-600 hover:bg-green-700 px-8 py-2 text-white"
-              type="submit"
-            >
-              Create Invoice
-            </Button>
-          )}
+          <Button
+            className="bg-green-600 hover:bg-green-700 px-8 py-2 text-white"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="animate-spin h-5 w-5" />
+                Creating Invoice...
+              </div>
+            ) : (
+              "Create Invoice"
+            )}
+          </Button>
         </div>
       </form>
     </div>

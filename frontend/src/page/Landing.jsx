@@ -10,10 +10,10 @@ function Landing() {
   const Account = useAccount();
   const navigate = useNavigate();
 
-//   useEffect(() => {
-//     if (Account.address) navigate("/home/sent");
-    //   }, [Account, Account.address]);
-    
+  //   useEffect(() => {
+  //     if (Account.address) navigate("/home/sent");
+  //   }, [Account, Account.address]);
+
   return (
     <>
       <div className=" grid md:grid-cols-2 justify-center text-center mt-32 font bg-[#161920]  md:px-44 ">
@@ -146,14 +146,14 @@ function Landing() {
         <footer className=" text-white py-8">
           <div className="container mx-auto flex flex-col md:flex-row justify-around items-center px-6">
             <div>
-              <div className=" text-4xl font-bold my-5 text-green-500">
-                Cha
-                <span className=" border-gray-500 border-[2px] rounded-sm border-dashed text-white">
-                  in
-                </span>
-                voice
+              <div className="flex items-center">
+                <img src="/logo.png" alt="logo" width={50} />
+                <p className="text-3xl font-bold text-green-500">
+                  Cha<span className="text-3xl font-bold text-white">in</span>
+                  voice
+                </p>
               </div>
-              <p className="text-gray-400 mt-1">Secure & Smart Invoicing</p>
+              <p className="text-gray-400 mt-1 text-center">Secure & Smart Invoicing</p>
             </div>
             <div className="flex gap-10">
               <div>

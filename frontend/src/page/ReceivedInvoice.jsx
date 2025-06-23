@@ -38,6 +38,13 @@ const columns = [
 function ReceivedInvoice() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [receivedInvoices, setReceivedInvoice] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [fee, setFee] = useState(0);
+  const { data: walletClient } = useWalletClient();
+  const [error, setError] = useState(null);
+  const { address } = useAccount();
+  const [invoiceItems, setInvoiceItems] = useState([]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -48,31 +55,17 @@ function ReceivedInvoice() {
     setPage(0);
   };
 
-  const { data: walletClient } = useWalletClient();
-  const { address } = useAccount();
-  const [loading, setLoading] = useState(false);
-  const [receivedInvoices, setReceivedInvoice] = useState([]);
-  const [invoiceItems, setInvoiceItems] = useState([]);
-
-  const [fee, setFee] = useState(0);
-
   useEffect(() => {
-    if (!walletClient) return;
+    if (!walletClient || !address) return;
 
     const fetchReceivedInvoices = async () => {
       try {
         setLoading(true);
+        setError(null);
 
         const provider = new BrowserProvider(walletClient);
         const signer = await provider.getSigner();
-
-        // 1. Setup Lit Node
-        const litNodeClient = new LitNodeClient({
-          litNetwork: LIT_NETWORK.DatilDev,
-        });
-        await litNodeClient.connect();
-
-        // 2. Get data from contract
+        // 1. Get data from contract
         const contract = new Contract(
           import.meta.env.VITE_CONTRACT_ADDRESS,
           ChainvoiceABI,
@@ -80,19 +73,24 @@ function ReceivedInvoice() {
         );
 
         const res = await contract.getReceivedInvoices(address);
-        console.log("getReceivedInvoices raw response:", res);
 
-        console.log(typeof res);
-        // if (!res || !Array.isArray(res) || res.length !== 2) {
-        //   console.warn("Unexpected contract response format.");
-        //   setReceivedInvoice([]);
-        //   setInvoiceItems([]);
-        //   setLoading(false);
-        //   return;
-        // }
+        // First check if user has any invoices
+        if (!res || !Array.isArray(res) || res.length === 0) {
+          setReceivedInvoice([]);
+          const fee = await contract.fee();
+          setFee(fee);
+          return;
+        }
 
+        // If invoices exist, proceed with decryption
+        // 2. Setup Lit Node
+        const litNodeClient = new LitNodeClient({
+          litNetwork: LIT_NETWORK.DatilDev,
+        });
+        await litNodeClient.connect();
+
+        // console.log("getReceivedInvoices raw response:", res);
         const decryptedInvoices = [];
-        const allItems = [];
 
         for (const invoice of res) {
           const id = invoice[0];
@@ -171,25 +169,21 @@ function ReceivedInvoice() {
           parsed["id"] = id;
           parsed["isPaid"] = isPaid;
           decryptedInvoices.push(parsed);
-          allItems.push(null); // placeholder
         }
 
-        console.log("decrypted : ", decryptedInvoices);
+        // console.log("decrypted : ", decryptedInvoices);
         setReceivedInvoice(decryptedInvoices);
-        setInvoiceItems(allItems);
-
         const fee = await contract.fee();
         setFee(fee);
       } catch (error) {
         console.error("Decryption error:", error);
-        alert("Failed to fetch or decrypt received invoices.");
+        setError("Failed to load invoices. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchReceivedInvoices();
-    console.log("invoices : ", receivedInvoices);
   }, [walletClient]);
 
   const payInvoice = async (id, amountDue) => {
@@ -205,8 +199,8 @@ function ReceivedInvoice() {
       console.log(ethers.parseUnits(String(amountDue), 18));
       const fee = await contract.fee();
       console.log(fee);
-      const amountDueInWei = ethers.parseUnits(String(amountDue), 18); 
-      const feeInWei = BigInt(fee); 
+      const amountDueInWei = ethers.parseUnits(String(amountDue), 18);
+      const feeInWei = BigInt(fee);
       const total = amountDueInWei + feeInWei;
 
       const res = await contract.payInvoice(BigInt(id), {
@@ -277,8 +271,12 @@ function ReceivedInvoice() {
         }}
       >
         {loading ? (
-          <p >loading........</p>
-        ) : receivedInvoices?.length > 0 ? (
+          <p className="p-4">Loading invoices...</p>
+        ) : error ? (
+          <p className="p-4 text-red-400">{error}</p>
+        ) : receivedInvoices.length === 0 ? (
+          <p className="p-4">No invoices found</p>
+        ) : (
           <>
             <TableContainer sx={{ maxHeight: 540 }}>
               <Table
@@ -323,11 +321,11 @@ function ReceivedInvoice() {
                               >
                                 {invoice.user.address
                                   ? `${invoice.user.address.substring(
-                                      0,
-                                      10
-                                    )}...${invoice.user.address.substring(
-                                      invoice.user.address.length - 10
-                                    )}`
+                                    0,
+                                    10
+                                  )}...${invoice.user.address.substring(
+                                    invoice.user.address.length - 10
+                                  )}`
                                   : "N/A"}
                               </TableCell>
                             );
@@ -353,11 +351,10 @@ function ReceivedInvoice() {
                                 className=" "
                               >
                                 <button
-                                  className={`text-sm rounded-full text-white font-bold px-3 ${
-                                    invoice.isPaid
+                                  className={`text-sm rounded-full text-white font-bold px-3 ${invoice.isPaid
                                       ? "bg-green-600"
                                       : "bg-red-600"
-                                  }`}
+                                    }`}
                                 >
                                   {invoice.isPaid ? "Paid" : "Not Paid"}
                                 </button>
@@ -453,14 +450,12 @@ function ReceivedInvoice() {
                   color: "white",
                 },
                 "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
-                  {
-                    color: "white",
-                  },
+                {
+                  color: "white",
+                },
               }}
             />
           </>
-        ) : (
-          <p>No invoices found</p>
         )}
       </Paper>
 
