@@ -65,6 +65,16 @@ function ReceivedInvoice() {
 
         const provider = new BrowserProvider(walletClient);
         const signer = await provider.getSigner();
+        const network = await provider.getNetwork();
+
+        if (network.chainId != 11155111) {
+          setError(
+            `Failed to load invoices. You're connected to the "${network.name}" network, but your invoices are on the "Sepolia" testnet. Please switch to Sepolia and try again.`
+          );
+
+          setLoading(false);
+          return;
+        }
         // 1. Get data from contract
         const contract = new Contract(
           import.meta.env.VITE_CONTRACT_ADDRESS,
@@ -177,7 +187,6 @@ function ReceivedInvoice() {
         setFee(fee);
       } catch (error) {
         console.error("Decryption error:", error);
-        setError("Failed to load invoices. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -321,11 +330,11 @@ function ReceivedInvoice() {
                               >
                                 {invoice.user.address
                                   ? `${invoice.user.address.substring(
-                                    0,
-                                    10
-                                  )}...${invoice.user.address.substring(
-                                    invoice.user.address.length - 10
-                                  )}`
+                                      0,
+                                      10
+                                    )}...${invoice.user.address.substring(
+                                      invoice.user.address.length - 10
+                                    )}`
                                   : "N/A"}
                               </TableCell>
                             );
@@ -351,10 +360,11 @@ function ReceivedInvoice() {
                                 className=" "
                               >
                                 <button
-                                  className={`text-sm rounded-full text-white font-bold px-3 ${invoice.isPaid
+                                  className={`text-sm rounded-full text-white font-bold px-3 ${
+                                    invoice.isPaid
                                       ? "bg-green-600"
                                       : "bg-red-600"
-                                    }`}
+                                  }`}
                                 >
                                   {invoice.isPaid ? "Paid" : "Not Paid"}
                                 </button>
@@ -450,9 +460,9 @@ function ReceivedInvoice() {
                   color: "white",
                 },
                 "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
-                {
-                  color: "white",
-                },
+                  {
+                    color: "white",
+                  },
               }}
             />
           </>

@@ -552,6 +552,7 @@ import {
   generateAuthSig,
   LitAccessControlConditionResource,
 } from "@lit-protocol/auth-helpers";
+import toast from "react-hot-toast";
 
 const columns = [
   { id: "fname", label: "First Name", minWidth: 100 },
@@ -594,6 +595,16 @@ function SentInvoice() {
 
         const provider = new BrowserProvider(walletClient);
         const signer = await provider.getSigner();
+        const network = await provider.getNetwork();
+        
+        if (network.chainId != 11155111) {
+          setError(
+            `Failed to load invoices. You're connected to the "${network.name}" network, but your invoices are on the "Sepolia" testnet. Please switch to Sepolia and try again.`
+          );
+          setLoading(false);
+          return;
+        }
+
         const contract = new Contract(
           import.meta.env.VITE_CONTRACT_ADDRESS,
           ChainvoiceABI,
@@ -609,7 +620,7 @@ function SentInvoice() {
           setFee(fee);
           return;
         }
-        
+
         // If invoices exist, proceed with decryption
         const litNodeClient = new LitNodeClient({
           litNetwork: LIT_NETWORK.DatilDev,
@@ -706,7 +717,7 @@ function SentInvoice() {
         setFee(fee);
       } catch (error) {
         console.error("Error fetching invoices:", error);
-        setError("Failed to load invoices. Please try again.");
+        // setError("Failed to load invoices. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -916,7 +927,6 @@ function SentInvoice() {
         onClose={toggleDrawer(null)}
         onOpen={toggleDrawer(null)}
       >
-
         {drawerState.selectedInvoice && (
           <div style={{ width: 650, padding: 20 }}>
             <div className="bg-white p-6 shadow-lg w-full max-w-2xl font-Montserrat">
