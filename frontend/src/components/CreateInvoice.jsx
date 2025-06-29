@@ -669,7 +669,8 @@ function CreateInvoice() {
               <div className="flex justify-between items-center mb-2">
                 <span className="font-medium text-gray-700">Total:</span>
                 <span className="font-bold text-lg text-black">
-                  {totalAmountDue} ETH
+                  {/* {totalAmountDue} ETH */}
+                  {totalAmountDue} cBTC
                 </span>
               </div>
             </div>
