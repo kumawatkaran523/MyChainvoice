@@ -597,9 +597,9 @@ function SentInvoice() {
         const signer = await provider.getSigner();
         const network = await provider.getNetwork();
         
-        if (network.chainId != 11155111) {
+        if (network.chainId != 5115) {
           setError(
-            `Failed to load invoices. You're connected to the "${network.name}" network, but your invoices are on the "Sepolia" testnet. Please switch to Sepolia and try again.`
+            `Failed to load invoices. You're connected to the "${network.name}" network, but your invoices are on the "Citrea" testnet. Please switch to Sepolia and try again.`
           );
           setLoading(false);
           return;

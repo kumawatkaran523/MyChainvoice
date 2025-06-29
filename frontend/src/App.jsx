@@ -21,8 +21,8 @@ import CreateInvoice from "./components/CreateInvoice";
 import SentInvoice from "./page/SentInvoice";
 import ReceivedInvoice from "./page/ReceivedInvoice";
 
-const AllChains = [...Object.values(chains)];
-// citreaTestnet,
+const AllChains = [...Object.values(chains), citreaTestnet];
+
 export const config = getDefaultConfig({
   appName: "My RainbowKit App",
   projectId: "YOUR_PROJECT_ID",
@@ -40,7 +40,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider
             coolMode
-            // initialChain={citreaTestnet}
+            initialChain={citreaTestnet}
             theme={darkTheme({
               accentColor: "#22c55e",
               accentColorForeground: "white",
@@ -52,7 +52,7 @@ function App() {
             <div className="font-Montserrat h-screen">
               <Router>
                 <Routes>
-                  <Route path="/" element={<Applayout />}>
+                  <Route path="/" element={<Applayout />}> 
                     <Route index element={<Landing />} />
                     <Route path="dashboard" element={<Home />}>
                       <Route path="create" element={<CreateInvoice />} />

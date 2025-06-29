@@ -125,7 +125,7 @@ const Treasure = () => {
                       {loading.fetch ? (
                         <Loader2 className="h-4 w-4 animate-spin inline" />
                       ) : (
-                        `${treasureAmount} ETH`
+                        `${treasureAmount} cBTC`
                       )}
                     </span>
                   </div>
@@ -215,7 +215,7 @@ const Treasure = () => {
               {loading.withdraw ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              Transfer {treasureAmount} ETH
+              Transfer {treasureAmount} cBTC
             </Button>
             <p className="text-xs text-gray-500 mt-2">
               Will be sent to the current treasury address
